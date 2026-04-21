@@ -9,8 +9,32 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as MaquinariaRouteImport } from './routes/maquinaria'
+import { Route as MapaRouteImport } from './routes/mapa'
+import { Route as FinanzasRouteImport } from './routes/finanzas'
+import { Route as AsesorRouteImport } from './routes/asesor'
 import { Route as IndexRouteImport } from './routes/index'
 
+const MaquinariaRoute = MaquinariaRouteImport.update({
+  id: '/maquinaria',
+  path: '/maquinaria',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MapaRoute = MapaRouteImport.update({
+  id: '/mapa',
+  path: '/mapa',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FinanzasRoute = FinanzasRouteImport.update({
+  id: '/finanzas',
+  path: '/finanzas',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AsesorRoute = AsesorRouteImport.update({
+  id: '/asesor',
+  path: '/asesor',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -19,28 +43,72 @@ const IndexRoute = IndexRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/asesor': typeof AsesorRoute
+  '/finanzas': typeof FinanzasRoute
+  '/mapa': typeof MapaRoute
+  '/maquinaria': typeof MaquinariaRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/asesor': typeof AsesorRoute
+  '/finanzas': typeof FinanzasRoute
+  '/mapa': typeof MapaRoute
+  '/maquinaria': typeof MaquinariaRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/asesor': typeof AsesorRoute
+  '/finanzas': typeof FinanzasRoute
+  '/mapa': typeof MapaRoute
+  '/maquinaria': typeof MaquinariaRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths: '/' | '/asesor' | '/finanzas' | '/mapa' | '/maquinaria'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to: '/' | '/asesor' | '/finanzas' | '/mapa' | '/maquinaria'
+  id: '__root__' | '/' | '/asesor' | '/finanzas' | '/mapa' | '/maquinaria'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AsesorRoute: typeof AsesorRoute
+  FinanzasRoute: typeof FinanzasRoute
+  MapaRoute: typeof MapaRoute
+  MaquinariaRoute: typeof MaquinariaRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/maquinaria': {
+      id: '/maquinaria'
+      path: '/maquinaria'
+      fullPath: '/maquinaria'
+      preLoaderRoute: typeof MaquinariaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/mapa': {
+      id: '/mapa'
+      path: '/mapa'
+      fullPath: '/mapa'
+      preLoaderRoute: typeof MapaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/finanzas': {
+      id: '/finanzas'
+      path: '/finanzas'
+      fullPath: '/finanzas'
+      preLoaderRoute: typeof FinanzasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/asesor': {
+      id: '/asesor'
+      path: '/asesor'
+      fullPath: '/asesor'
+      preLoaderRoute: typeof AsesorRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -53,7 +121,20 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AsesorRoute: AsesorRoute,
+  FinanzasRoute: FinanzasRoute,
+  MapaRoute: MapaRoute,
+  MaquinariaRoute: MaquinariaRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { createStart } from '@tanstack/react-start'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+  }
+}
