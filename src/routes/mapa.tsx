@@ -673,15 +673,13 @@ function GuiaIntervencion({
   );
 }
 
-function SoilStat({
-  label,
-  value,
-  highlight = false,
-}: {
+type SoilStatProps = {
   label: string;
   value: string;
   highlight?: boolean;
-}) {
+};
+
+function SoilStat({ label, value, highlight }: SoilStatProps) {
   return (
     <div
       className={`rounded-xl p-3 transition ${
