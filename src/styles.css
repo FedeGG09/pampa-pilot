@@ -7,17 +7,11 @@
 @custom-variant dark (&:is(.dark *));
 
 /*
- * Design system definition.
+ * Design system — "Sage Studio" light theme.
  *
- * The @theme inline block maps CSS custom properties to Tailwind utility
- * classes (e.g. --color-primary -> bg-primary, text-primary).
- *
- * The :root and .dark blocks define the actual color values using oklch.
- * All colors MUST use oklch format.
- *
- * To add a new semantic color:
- * 1. Add the variable to :root (light value) and .dark (dark value)
- * 2. Register it in @theme inline as --color-<name>: var(--<name>)
+ * Inspired by an eucalyptus / sage moodboard:
+ * crisp white canvas, soft warm greys, eucalyptus & sage greens
+ * as the primary accent, deep slate-teal for emphasis.
  */
 
 @theme inline {
@@ -76,44 +70,44 @@
 
 :root {
   --radius: 1rem;
-  /* Agridark palette — dark theme by default */
-  --background: oklch(0.14 0.012 155);          /* #090D0B */
-  --foreground: oklch(0.96 0.005 150);
-  --surface: oklch(0.22 0.04 158);              /* #0F241D */
-  --card: oklch(0.19 0.018 250);                /* #111827 */
-  --card-foreground: oklch(0.96 0.005 150);
-  --popover: oklch(0.19 0.018 250);
-  --popover-foreground: oklch(0.96 0.005 150);
-  --primary: oklch(0.92 0.22 130);              /* Neon lime #B8FF3D */
-  --primary-foreground: oklch(0.16 0.015 155);
-  --secondary: oklch(0.24 0.025 158);
-  --secondary-foreground: oklch(0.96 0.005 150);
-  --muted: oklch(0.22 0.018 250);
-  --muted-foreground: oklch(0.7 0.02 155);
-  --accent: oklch(0.28 0.06 150);
-  --accent-foreground: oklch(0.96 0.005 150);
-  --accent-lime: oklch(0.92 0.22 130);          /* #B8FF3D */
-  --accent-green: oklch(0.88 0.2 142);          /* #7CFF6B */
-  --destructive: oklch(0.65 0.22 27);
-  --destructive-foreground: oklch(0.98 0 0);
-  --status-error: oklch(0.65 0.22 27);          /* #EF4444 */
-  --status-warning: oklch(0.83 0.17 88);        /* #FACC15 */
-  --border: oklch(1 0 0 / 0.06);
-  --input: oklch(1 0 0 / 0.08);
-  --ring: oklch(0.92 0.22 130);
-  --chart-1: oklch(0.92 0.22 130);
-  --chart-2: oklch(0.88 0.2 142);
-  --chart-3: oklch(0.7 0.15 180);
-  --chart-4: oklch(0.83 0.17 88);
-  --chart-5: oklch(0.65 0.22 27);
-  --sidebar: oklch(0.16 0.012 155);
-  --sidebar-foreground: oklch(0.9 0.01 155);
-  --sidebar-primary: oklch(0.92 0.22 130);
-  --sidebar-primary-foreground: oklch(0.16 0.015 155);
-  --sidebar-accent: oklch(0.24 0.04 158);
-  --sidebar-accent-foreground: oklch(0.96 0.005 150);
-  --sidebar-border: oklch(1 0 0 / 0.06);
-  --sidebar-ring: oklch(0.92 0.22 130);
+  /* Sage Studio palette — light theme */
+  --background: oklch(0.99 0.003 120);            /* near-white #FBFCFB */
+  --foreground: oklch(0.25 0.02 200);             /* deep slate-teal */
+  --surface: oklch(0.96 0.01 150);                /* warm off-white */
+  --card: oklch(1 0 0);                           /* pure white card */
+  --card-foreground: oklch(0.25 0.02 200);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.25 0.02 200);
+  --primary: oklch(0.62 0.07 165);                /* eucalyptus / sage green */
+  --primary-foreground: oklch(0.99 0.003 120);
+  --secondary: oklch(0.94 0.012 150);             /* soft sage tint */
+  --secondary-foreground: oklch(0.3 0.02 200);
+  --muted: oklch(0.96 0.008 150);
+  --muted-foreground: oklch(0.48 0.015 200);
+  --accent: oklch(0.88 0.04 160);                 /* mint accent */
+  --accent-foreground: oklch(0.25 0.03 200);
+  --accent-lime: oklch(0.62 0.07 165);            /* sage as the "accent" */
+  --accent-green: oklch(0.5 0.06 180);            /* deeper teal-green */
+  --destructive: oklch(0.6 0.18 27);
+  --destructive-foreground: oklch(0.99 0 0);
+  --status-error: oklch(0.6 0.18 27);
+  --status-warning: oklch(0.78 0.14 75);
+  --border: oklch(0.25 0.02 200 / 0.1);
+  --input: oklch(0.25 0.02 200 / 0.12);
+  --ring: oklch(0.62 0.07 165);
+  --chart-1: oklch(0.62 0.07 165);
+  --chart-2: oklch(0.5 0.06 180);
+  --chart-3: oklch(0.78 0.04 160);
+  --chart-4: oklch(0.78 0.14 75);
+  --chart-5: oklch(0.6 0.18 27);
+  --sidebar: oklch(0.97 0.008 150);               /* soft sage-white */
+  --sidebar-foreground: oklch(0.3 0.02 200);
+  --sidebar-primary: oklch(0.62 0.07 165);
+  --sidebar-primary-foreground: oklch(0.99 0.003 120);
+  --sidebar-accent: oklch(0.92 0.025 160);
+  --sidebar-accent-foreground: oklch(0.25 0.03 200);
+  --sidebar-border: oklch(0.25 0.02 200 / 0.08);
+  --sidebar-ring: oklch(0.62 0.07 165);
 }
 
 @layer base {
@@ -146,22 +140,22 @@
 
 @layer utilities {
   .glass {
-    background-color: color-mix(in oklab, var(--card) 70%, transparent);
+    background-color: color-mix(in oklab, var(--card) 80%, transparent);
     backdrop-filter: blur(14px);
     -webkit-backdrop-filter: blur(14px);
     border: 1px solid var(--border);
   }
 
   .neon-border {
-    border: 1px solid color-mix(in oklab, var(--accent-lime) 50%, transparent);
+    border: 1px solid color-mix(in oklab, var(--primary) 35%, transparent);
     box-shadow:
-      0 0 0 1px color-mix(in oklab, var(--accent-lime) 25%, transparent),
-      0 0 24px -4px color-mix(in oklab, var(--accent-lime) 35%, transparent);
+      0 1px 0 0 color-mix(in oklab, var(--primary) 10%, transparent),
+      0 8px 24px -12px color-mix(in oklab, var(--primary) 30%, transparent);
   }
 
   .neon-text {
-    color: var(--accent-lime);
-    text-shadow: 0 0 12px color-mix(in oklab, var(--accent-lime) 60%, transparent);
+    color: var(--accent-green);
+    text-shadow: none;
   }
 
   .card-hover {
@@ -171,15 +165,15 @@
       box-shadow 0.2s ease;
   }
   .card-hover:hover {
-    transform: scale(1.02);
-    border-color: color-mix(in oklab, var(--accent-lime) 70%, transparent);
-    box-shadow: 0 0 28px -6px color-mix(in oklab, var(--accent-lime) 45%, transparent);
+    transform: translateY(-2px);
+    border-color: color-mix(in oklab, var(--primary) 50%, transparent);
+    box-shadow: 0 14px 32px -18px color-mix(in oklab, var(--primary) 45%, transparent);
   }
 
   .grid-bg {
     background-image:
-      linear-gradient(to right, oklch(1 0 0 / 0.04) 1px, transparent 1px),
-      linear-gradient(to bottom, oklch(1 0 0 / 0.04) 1px, transparent 1px);
+      linear-gradient(to right, oklch(0.25 0.02 200 / 0.04) 1px, transparent 1px),
+      linear-gradient(to bottom, oklch(0.25 0.02 200 / 0.04) 1px, transparent 1px);
     background-size: 32px 32px;
   }
 
@@ -188,7 +182,7 @@
     height: 6px;
   }
   .scrollbar-thin::-webkit-scrollbar-thumb {
-    background: oklch(1 0 0 / 0.1);
+    background: oklch(0.25 0.02 200 / 0.18);
     border-radius: 999px;
   }
 }
