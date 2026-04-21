@@ -30,14 +30,19 @@ export const Route = createRootRoute({
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Lovable App" },
-      { name: "description", content: "Lovable Generated Project" },
-      { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Lovable App" },
-      { property: "og:description", content: "Lovable Generated Project" },
+      { title: "AgroCopilot AI · Sistema operativo del agro argentino" },
+      {
+        name: "description",
+        content:
+          "Plataforma SaaS para productores agropecuarios: lotes, maquinaria, asesor IA y finanzas en tiempo real.",
+      },
+      { property: "og:title", content: "AgroCopilot AI" },
+      {
+        property: "og:description",
+        content: "Mapa de lotes, asesor IA y monitor financiero del agro argentino.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
-      { name: "twitter:site", content: "@Lovable" },
     ],
     links: [
       {
@@ -66,5 +71,5 @@ function RootShell({ children }: { children: React.ReactNode }) {
 }
 
 function RootComponent() {
-  return <Outlet />;
+  return <AppShell />;
 }
