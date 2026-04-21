@@ -320,10 +320,28 @@ function LoteLabel({ points, nombre, ha }: { points: string; nombre: string; ha:
   );
 }
 
-function SoilStat({ label, value }: { label: string; value: string }) {
+function SoilStat({
+  label,
+  value,
+  highlight = false,
+}: {
+  label: string;
+  value: string;
+  highlight?: boolean;
+}) {
   return (
-    <div className="rounded-xl bg-muted/40 p-3">
-      <div className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+    <div
+      className={`rounded-xl p-3 transition ${
+        highlight
+          ? "border border-primary/50 bg-primary/10 ring-1 ring-primary/30"
+          : "bg-muted/40"
+      }`}
+    >
+      <div
+        className={`font-mono text-[10px] uppercase tracking-wider ${
+          highlight ? "text-primary" : "text-muted-foreground"
+        }`}
+      >
         {label}
       </div>
       <div className="mt-1 font-data text-lg font-semibold">{value}</div>
