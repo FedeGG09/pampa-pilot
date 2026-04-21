@@ -42,6 +42,7 @@ const capas: { id: Capa; label: string; icon: typeof Layers }[] = [
 function MapaPage() {
   const [selected, setSelected] = useState<Lote | null>(null);
   const [capa, setCapa] = useState<Capa>("ndvi");
+  const [showGuide, setShowGuide] = useState(false);
 
   const opacityFor = (lote: Lote) => {
     if (capa === "rinde") return Math.min(1, lote.rinde / 90);
