@@ -1,7 +1,19 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState } from "react";
-import { X, Layers, Sparkles, Droplets, Leaf, BarChart3 } from "lucide-react";
+import {
+  X,
+  Layers,
+  Sparkles,
+  Droplets,
+  Leaf,
+  BarChart3,
+  BookOpen,
+  CheckCircle2,
+  AlertTriangle,
+  Calendar,
+  Wrench,
+} from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { lotes, type Lote } from "@/lib/mock-data";
 
