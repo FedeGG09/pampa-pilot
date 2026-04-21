@@ -47,10 +47,69 @@ export type Lote = {
   humedad: number;
   recomendacion: string;
   historial: string[];
+  // Insights por capa activa del mapa
+  insights: {
+    rinde: { titulo: string; detalle: string; recomendacion: string };
+    ndvi: { titulo: string; detalle: string; recomendacion: string };
+    humedad: { titulo: string; detalle: string; recomendacion: string };
+  };
   // SVG polygon points for the visual map
   points: string;
   color: string;
 };
+
+const buildInsights = (l: {
+  rinde: number;
+  ndvi: number;
+  humedad: number;
+  cultivo: string;
+}) => ({
+  rinde: {
+    titulo: `Rinde estimado ${l.rinde} qq/ha`,
+    detalle:
+      l.rinde >= 60
+        ? "Productividad superior al promedio zonal. Zonas de manejo bien diferenciadas."
+        : l.rinde >= 35
+          ? "Rinde dentro del promedio histórico. Variabilidad media intra-lote."
+          : "Rinde por debajo del potencial. Detectada zona deprimida al sureste.",
+    recomendacion:
+      l.rinde >= 60
+        ? `Mantener estrategia de ${l.cultivo}. Considerar densidad variable por ambiente.`
+        : l.rinde >= 35
+          ? "Aplicar fertilización variable según mapa de productividad histórico."
+          : "Muestreo dirigido + revisión de compactación. Posible necesidad de descompactador.",
+  },
+  ndvi: {
+    titulo: `NDVI ${l.ndvi.toFixed(2)} (Sentinel-2)`,
+    detalle:
+      l.ndvi >= 0.75
+        ? "Vigor vegetativo excelente. Cobertura uniforme en todo el lote."
+        : l.ndvi >= 0.6
+          ? "Vigor moderado. Manchones de menor verdor en bordes norte."
+          : "Estrés vegetativo evidente. Pérdida de cobertura > 20%.",
+    recomendacion:
+      l.ndvi >= 0.75
+        ? "Sin intervención. Próxima pasada satelital en 5 días."
+        : l.ndvi >= 0.6
+          ? "Refuerzo foliar de N + monitoreo de plagas defoliadoras."
+          : "Inspección a campo urgente. Posible déficit hídrico o plaga activa.",
+  },
+  humedad: {
+    titulo: `Humedad de suelo ${l.humedad}%`,
+    detalle:
+      l.humedad >= 65
+        ? "Reservas hídricas óptimas en perfil 0-100 cm."
+        : l.humedad >= 50
+          ? "Humedad adecuada en superficie, perfil profundo en descenso."
+          : "Déficit hídrico marcado. Riesgo de estrés en próximos 7 días.",
+    recomendacion:
+      l.humedad >= 65
+        ? "Ventana ideal para siembra o aplicación de herbicidas."
+        : l.humedad >= 50
+          ? "Postergar fertilización nitrogenada hasta próxima lluvia (>15 mm)."
+          : "Activar protocolo Niña. Priorizar cultivos de ciclo corto y baja demanda hídrica.",
+  },
+});
 
 export const lotes: Lote[] = [
   {
