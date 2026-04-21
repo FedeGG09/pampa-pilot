@@ -12,13 +12,20 @@ import {
   Leaf,
 } from "lucide-react";
 
-const nav = [
+type NavItem = {
+  to: string;
+  label: string;
+  icon: typeof LayoutDashboard;
+  exact?: boolean;
+};
+
+const nav: NavItem[] = [
   { to: "/", label: "Dashboard", icon: LayoutDashboard, exact: true },
   { to: "/mapa", label: "Mapa de Lotes", icon: Map },
   { to: "/asesor", label: "Asesor IA", icon: Sparkles },
   { to: "/maquinaria", label: "Maquinaria", icon: Tractor },
   { to: "/finanzas", label: "Finanzas / Macro", icon: TrendingUp },
-] as const;
+];
 
 export function AppShell() {
   const location = useLocation();
