@@ -673,6 +673,7 @@ function GuiaIntervencion({
   );
 }
 
+function SoilStat({
   label,
   value,
   highlight = false,
