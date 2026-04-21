@@ -199,16 +199,63 @@ function MapaPage() {
               </div>
 
               <div className="mt-4 grid grid-cols-2 gap-2">
-                <SoilStat label="NDVI" value={selected.ndvi.toFixed(2)} />
-                <SoilStat label="Humedad" value={`${selected.humedad}%`} />
+                <SoilStat
+                  label="NDVI"
+                  value={selected.ndvi.toFixed(2)}
+                  highlight={capa === "ndvi"}
+                />
+                <SoilStat
+                  label="Humedad"
+                  value={`${selected.humedad}%`}
+                  highlight={capa === "humedad"}
+                />
               </div>
 
-              <div className="mt-6 rounded-2xl border border-primary/40 bg-primary/10 p-4">
-                <div className="flex items-center gap-2 text-primary">
-                  <Sparkles className="h-4 w-4" />
-                  <div className="font-mono text-[10px] uppercase tracking-wider">
-                    Insight IA
+              <div className="mt-2">
+                <SoilStat
+                  label="Rinde estimado"
+                  value={`${selected.rinde} qq/ha`}
+                  highlight={capa === "rinde"}
+                />
+              </div>
+
+              <motion.div
+                key={capa}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.25 }}
+                className="mt-6 rounded-2xl border border-primary/40 bg-primary/10 p-4"
+              >
+                <div className="flex items-center justify-between text-primary">
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="h-4 w-4" />
+                    <div className="font-mono text-[10px] uppercase tracking-wider">
+                      Insight IA · Capa {capa}
+                    </div>
                   </div>
+                  <span className="font-mono text-[10px] uppercase tracking-wider text-primary/70">
+                    {capas.find((c) => c.id === capa)?.label}
+                  </span>
+                </div>
+                <div className="mt-2 text-sm font-semibold">
+                  {selected.insights[capa].titulo}
+                </div>
+                <p className="mt-1 text-sm leading-relaxed text-foreground/85">
+                  {selected.insights[capa].detalle}
+                </p>
+                <div className="mt-3 rounded-xl border border-primary/30 bg-background/40 p-3">
+                  <div className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+                    Recomendación
+                  </div>
+                  <p className="mt-1 text-sm leading-relaxed">
+                    {selected.insights[capa].recomendacion}
+                  </p>
+                </div>
+              </motion.div>
+
+              <div className="mt-4 rounded-2xl border border-border bg-muted/30 p-4">
+                <div className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+                  Recomendación general
                 </div>
                 <p className="mt-2 text-sm leading-relaxed">{selected.recomendacion}</p>
               </div>
