@@ -290,10 +290,28 @@ function MapaPage() {
                 </ul>
               </div>
 
-              <button className="mt-8 w-full rounded-xl bg-primary py-3 text-sm font-semibold text-primary-foreground">
+              <button
+                onClick={() => setShowGuide(true)}
+                className="mt-8 inline-flex w-full items-center justify-center gap-2 rounded-xl border border-primary/40 bg-primary/10 py-3 text-sm font-semibold text-primary transition hover:bg-primary/20"
+              >
+                <BookOpen className="h-4 w-4" />
+                Ver guía de intervención
+              </button>
+              <button className="mt-2 w-full rounded-xl bg-primary py-3 text-sm font-semibold text-primary-foreground">
                 Planificar próxima siembra
               </button>
             </motion.aside>
+          )}
+        </AnimatePresence>
+
+        {/* Mini-manual modal */}
+        <AnimatePresence>
+          {selected && showGuide && (
+            <GuiaIntervencion
+              lote={selected}
+              capa={capa}
+              onClose={() => setShowGuide(false)}
+            />
           )}
         </AnimatePresence>
       </div>
