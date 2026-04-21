@@ -111,7 +111,7 @@ const buildInsights = (l: {
   },
 });
 
-export const lotes: Lote[] = [
+const lotesBase: Omit<Lote, "insights">[] = [
   {
     id: "ombu",
     nombre: "El Ombú",
@@ -193,6 +193,11 @@ export const lotes: Lote[] = [
     color: "var(--accent-lime)",
   },
 ];
+
+export const lotes: Lote[] = lotesBase.map((l) => ({
+  ...l,
+  insights: buildInsights(l),
+}));
 
 export type Semilla = {
   id: string;
