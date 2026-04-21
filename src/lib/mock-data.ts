@@ -319,6 +319,69 @@ export const flota: Maquina[] = [
   },
 ];
 
+export type DiagError = {
+  code: string;
+  comando: string;
+  label: string;
+  equipo: string;
+  titulo: string;
+  severidad: "Crítica" | "Alta" | "Media";
+  pasos: string[];
+  partes: string[];
+};
+
+export const diagErrores: DiagError[] = [
+  {
+    code: "404",
+    comando: "Error 404 cosechadora",
+    label: "Error 404 · Cosechadora",
+    equipo: "John Deere S780",
+    titulo: "Pérdida de presión hidráulica",
+    severidad: "Crítica",
+    pasos: [
+      "Verificar nivel de aceite hidráulico (mínimo 38 L en mirilla lateral).",
+      "Inspeccionar filtro principal P/N RE284091 — reemplazar si supera 600 hs.",
+      "Revisar mangueras del cabezal por fisuras, abrasión o conexiones flojas.",
+      "Comprobar bomba auxiliar — presión nominal 180 bar a 2.100 RPM.",
+      "Si persiste, ejecutar reset de ECU vía menú Service → código 0x4F.",
+      "Registrar evento en bitácora y notificar a contratista responsable.",
+    ],
+    partes: ["Filtro RE284091", "Aceite Hy-Gard 20L", "Kit O-rings AH215680"],
+  },
+  {
+    code: "500",
+    comando: "Error 500 motor",
+    label: "Error 500 · Sobretemperatura motor",
+    equipo: "John Deere S780",
+    titulo: "Sobretemperatura en bloque motor",
+    severidad: "Alta",
+    pasos: [
+      "Detener equipo en zona segura y dejar enfriar 15 min sin apagar motor.",
+      "Verificar nivel de refrigerante en tanque de expansión (frío).",
+      "Inspeccionar radiador y aletas — limpiar con aire comprimido.",
+      "Revisar tensión de correa de bomba de agua.",
+      "Comprobar termostato — temperatura de apertura 82°C.",
+    ],
+    partes: ["Refrigerante Cool-Gard II 5L", "Termostato RE545573"],
+  },
+  {
+    code: "212",
+    comando: "Error 212 transmisión",
+    label: "Error 212 · Transmisión",
+    equipo: "Case IH Puma 215",
+    titulo: "Falla en módulo de transmisión PowerShift",
+    severidad: "Media",
+    pasos: [
+      "Detener avance y colocar palanca en neutro.",
+      "Verificar nivel de aceite de transmisión Hy-Tran Ultra.",
+      "Inspeccionar arnés de sensores de embrague (conector C12).",
+      "Borrar código vía AFS Pro 700 → Diagnóstico → Reset DTC.",
+      "Realizar prueba de marcha a baja velocidad por 5 min.",
+    ],
+    partes: ["Aceite Hy-Tran Ultra 20L", "Sensor velocidad 87674621"],
+  },
+];
+
 export const macroNoticias = [
   {
     fuente: "BCR",
