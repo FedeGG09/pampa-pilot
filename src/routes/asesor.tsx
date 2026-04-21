@@ -1,245 +1,146 @@
+// src/routes/asesor.tsx
+import * as React from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useRef, useState } from "react";
-import { motion } from "framer-motion";
-import { Sparkles, Send, Shield, Award, Leaf } from "lucide-react";
-import { PageHeader } from "@/components/PageHeader";
-import { semillas } from "@/lib/mock-data";
+import { diagnoseDtc } from "@/lib/agrocopilot.api";
+import type { DtcResponse } from "@/lib/types";
+import { useAsyncAction } from "@/hooks/useAsyncAction";
 
 export const Route = createFileRoute("/asesor")({
-  head: () => ({
-    meta: [
-      { title: "Asesor IA · AgroCopilot AI" },
-      {
-        name: "description",
-        content:
-          "Copilot de semillas e insumos. Comparativa de variedades NK, Don Mario, Pioneer y recomendación basada en IA.",
-      },
-    ],
-  }),
   component: AsesorPage,
 });
 
-type Msg = { role: "user" | "ai"; text: string };
-
-const initialMsgs: Msg[] = [
-  {
-    role: "ai",
-    text:
-      "Hola Mariano. Analicé tus 5 lotes y el pronóstico estacional. ¿Querés una recomendación para la próxima campaña de soja?",
-  },
-];
-
 function AsesorPage() {
-  const [msgs, setMsgs] = useState<Msg[]>(initialMsgs);
-  const [input, setInput] = useState("");
-  const [thinking, setThinking] = useState(false);
-  const endRef = useRef<HTMLDivElement>(null);
+  const [code, setCode] = React.useState("000107.00");
+  const [equipment, setEquipment] = React.useState("John Deere S780");
+  const [symptom, setSymptom] = React.useState("Filtro de aire tapado y pérdida de potencia");
+  const [context, setContext] = React.useState("Cosecha de soja, polvo fino y alta temperatura");
+  const { data, loading, error, run, reset } = useAsyncAction(diagnoseDtc);
 
-  useEffect(() => {
-    endRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [msgs, thinking]);
-
-  const send = (text?: string) => {
-    const value = (text ?? input).trim();
-    if (!value) return;
-    setMsgs((m) => [...m, { role: "user", text: value }]);
-    setInput("");
-    setThinking(true);
-    setTimeout(() => {
-      setThinking(false);
-      setMsgs((m) => [
-        ...m,
-        {
-          role: "ai",
-          text:
-            "Basado en tu lote 'El Ombú' (PH 6.3, N alto) y el pronóstico de año Niña, la mejor opción es **DM 40R16** (Don Mario, ciclo corto). Ofrece resistencia a roya y buena performance en años secos. Densidad sugerida: 320.000 pl/ha.",
-        },
-      ]);
-    }, 1200);
+  const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    await run({
+      code,
+      equipment,
+      symptom,
+      context,
+    });
   };
 
+  const result = data as DtcResponse | null;
+
   return (
-    <>
-      <PageHeader
-        eyebrow="Copilot de insumos"
-        title="Asesor IA de Semillas"
-        subtitle="Recomendación inteligente cruzando suelo, clima y catálogo 2026"
-      />
+    <main className="min-h-screen bg-[#090D0B] text-white p-6">
+      <div className="mx-auto max-w-5xl space-y-6">
+        <header className="space-y-2">
+          <h1 className="text-3xl font-semibold">Asesor técnico</h1>
+          <p className="text-white/70">
+            Ingresá el DTC y el contexto operativo. El backend devuelve diagnóstico, causas probables y
+            acciones correctivas.
+          </p>
+        </header>
 
-      <div className="grid gap-4 lg:grid-cols-[1fr_440px]">
-        {/* Cards */}
-        <div className="grid gap-3 sm:grid-cols-2">
-          {semillas.map((s, i) => (
-            <motion.div
-              key={s.id}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.04 }}
-              className="card-hover relative rounded-2xl border border-border bg-card p-4"
-            >
-              {s.badge && (
-                <div className="absolute -top-2 right-3 inline-flex items-center gap-1 rounded-full bg-primary px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-primary-foreground">
-                  <Sparkles className="h-3 w-3" />
-                  {s.badge}
-                </div>
-              )}
-              <div className="flex items-center justify-between">
-                <div className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
-                  {s.marca}
-                </div>
-                <div className="rounded-md border border-border bg-muted/40 px-1.5 py-0.5 font-mono text-[10px]">
-                  {s.cultivo}
-                </div>
-              </div>
-              <div className="mt-2 text-base font-bold">{s.variedad}</div>
-              <div className="mt-1 text-xs text-muted-foreground">Ciclo {s.ciclo}</div>
-
-              <div className="mt-3 flex flex-wrap gap-1">
-                {s.resistencia.map((r) => (
-                  <span
-                    key={r}
-                    className="inline-flex items-center gap-1 rounded-md border border-border bg-muted/30 px-1.5 py-0.5 text-[10px] text-muted-foreground"
-                  >
-                    <Shield className="h-2.5 w-2.5" />
-                    {r}
-                  </span>
-                ))}
-              </div>
-
-              <div className="mt-4 flex items-center justify-between">
-                <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                  <Award className="h-3.5 w-3.5 text-primary" />
-                  Score IA
-                </div>
-                <div className="font-data text-xl font-bold text-primary">{s.scoreIA}</div>
-              </div>
-              <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-muted/40">
-                <div
-                  className="h-full rounded-full bg-primary"
-                  style={{ width: `${s.scoreIA}%` }}
-                />
-              </div>
-            </motion.div>
-          ))}
-        </div>
-
-        {/* Chat */}
-        <div className="flex h-[640px] flex-col overflow-hidden rounded-2xl border border-border bg-card">
-          <div className="flex items-center gap-2 border-b border-border px-4 py-3">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/15 neon-border">
-              <Sparkles className="h-4 w-4 text-primary" />
-            </div>
-            <div>
-              <div className="text-sm font-semibold">Copilot Agronómico</div>
-              <div className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
-                <span className="text-primary">●</span> Modelo AgroLLM-v3
-              </div>
-            </div>
-          </div>
-
-          <div className="flex-1 space-y-3 overflow-y-auto px-4 py-4 scrollbar-thin">
-            {msgs.map((m, i) => (
-              <div
-                key={i}
-                className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}
-              >
-                <div
-                  className={`max-w-[85%] rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed ${
-                    m.role === "user"
-                      ? "bg-muted/60 text-foreground"
-                      : "bg-[var(--surface)] text-foreground"
-                  }`}
-                >
-                  {m.role === "ai" && (
-                    <div className="mb-1 flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-wider text-primary">
-                      <Leaf className="h-3 w-3" /> Copilot
-                    </div>
-                  )}
-                  <FormattedText text={m.text} />
-                </div>
-              </div>
-            ))}
-            {thinking && (
-              <div className="flex justify-start">
-                <div className="rounded-2xl bg-[var(--surface)] px-3.5 py-2.5">
-                  <div className="flex items-center gap-1">
-                    <Dot delay={0} />
-                    <Dot delay={0.15} />
-                    <Dot delay={0.3} />
-                  </div>
-                </div>
-              </div>
-            )}
-            <div ref={endRef} />
-          </div>
-
-          <div className="border-t border-border p-3">
-            <div className="mb-2 flex flex-wrap gap-1.5">
-              {[
-                "Mejor soja para El Ombú",
-                "Comparar DM 40R16 vs NK 5009",
-                "Dosis de fertilizante",
-              ].map((q) => (
-                <button
-                  key={q}
-                  onClick={() => send(q)}
-                  className="rounded-full border border-border bg-muted/40 px-2.5 py-1 text-[11px] text-muted-foreground transition hover:text-foreground"
-                >
-                  {q}
-                </button>
-              ))}
-            </div>
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                send();
-              }}
-              className="flex items-center gap-2 rounded-xl border border-border bg-background px-3 py-2"
-            >
+        <section className="rounded-2xl border border-white/10 bg-white/5 p-5">
+          <form className="grid gap-4 md:grid-cols-2" onSubmit={onSubmit}>
+            <label className="grid gap-2">
+              <span className="text-sm text-white/70">Código DTC</span>
               <input
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                placeholder="Preguntá al Copilot..."
-                className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+                value={code}
+                onChange={(e) => setCode(e.target.value)}
+                className="rounded-xl border border-white/10 bg-black/30 px-4 py-3 outline-none"
+                placeholder="000107.00"
               />
+            </label>
+
+            <label className="grid gap-2">
+              <span className="text-sm text-white/70">Equipo</span>
+              <input
+                value={equipment}
+                onChange={(e) => setEquipment(e.target.value)}
+                className="rounded-xl border border-white/10 bg-black/30 px-4 py-3 outline-none"
+                placeholder="John Deere S780"
+              />
+            </label>
+
+            <label className="grid gap-2 md:col-span-2">
+              <span className="text-sm text-white/70">Síntoma</span>
+              <input
+                value={symptom}
+                onChange={(e) => setSymptom(e.target.value)}
+                className="rounded-xl border border-white/10 bg-black/30 px-4 py-3 outline-none"
+              />
+            </label>
+
+            <label className="grid gap-2 md:col-span-2">
+              <span className="text-sm text-white/70">Contexto</span>
+              <textarea
+                value={context}
+                onChange={(e) => setContext(e.target.value)}
+                className="min-h-28 rounded-xl border border-white/10 bg-black/30 px-4 py-3 outline-none"
+              />
+            </label>
+
+            <div className="flex gap-3 md:col-span-2">
               <button
                 type="submit"
-                className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground transition hover:opacity-90"
+                className="rounded-xl bg-lime-300 px-5 py-3 font-medium text-black disabled:opacity-60"
+                disabled={loading}
               >
-                <Send className="h-4 w-4" />
+                {loading ? "Diagnosticar..." : "Consultar DTC"}
               </button>
-            </form>
-          </div>
-        </div>
+              <button
+                type="button"
+                onClick={reset}
+                className="rounded-xl border border-white/15 px-5 py-3 font-medium text-white/80"
+              >
+                Limpiar
+              </button>
+            </div>
+          </form>
+        </section>
+
+        {error ? (
+          <section className="rounded-2xl border border-red-400/30 bg-red-500/10 p-5 text-red-100">
+            {error}
+          </section>
+        ) : null}
+
+        {result ? (
+          <section className="grid gap-4 rounded-2xl border border-white/10 bg-white/5 p-5">
+            <div>
+              <p className="text-sm text-white/60">Diagnóstico</p>
+              <h2 className="text-2xl font-semibold">{result.diagnosis}</h2>
+              <p className="mt-1 text-white/70">
+                Módulo: {result.module} · Severidad: {result.severity} · Confianza: {(result.confidence * 100).toFixed(0)}%
+              </p>
+            </div>
+
+            <div className="grid gap-4 md:grid-cols-2">
+              <InfoList title="Causas probables" items={result.likely_causes} />
+              <InfoList title="Acciones inmediatas" items={result.immediate_actions} />
+              <InfoList title="Corrección definitiva" items={result.corrective_actions} />
+              <InfoList title="Condiciones de stop" items={result.stop_conditions} />
+            </div>
+
+            <div className="rounded-xl border border-white/10 bg-black/20 p-4">
+              <p className="text-sm text-white/60">Notas del asistente</p>
+              <p className="mt-2 text-white/90">{result.notes}</p>
+            </div>
+          </section>
+        ) : null}
       </div>
-    </>
+    </main>
   );
 }
 
-function FormattedText({ text }: { text: string }) {
-  // bold **...**
-  const parts = text.split(/(\*\*[^*]+\*\*)/g);
+function InfoList({ title, items }: { title: string; items: string[] }) {
   return (
-    <>
-      {parts.map((p, i) =>
-        p.startsWith("**") && p.endsWith("**") ? (
-          <span key={i} className="neon-text font-semibold">
-            {p.slice(2, -2)}
-          </span>
-        ) : (
-          <span key={i}>{p}</span>
-        ),
-      )}
-    </>
-  );
-}
-
-function Dot({ delay }: { delay: number }) {
-  return (
-    <motion.span
-      className="inline-block h-1.5 w-1.5 rounded-full bg-primary"
-      animate={{ opacity: [0.2, 1, 0.2], y: [0, -2, 0] }}
-      transition={{ duration: 0.9, repeat: Infinity, delay }}
-    />
+    <div className="rounded-xl border border-white/10 bg-black/20 p-4">
+      <p className="text-sm text-white/60">{title}</p>
+      <ul className="mt-2 list-disc space-y-1 pl-5 text-white/90">
+        {items.map((item) => (
+          <li key={item}>{item}</li>
+        ))}
+      </ul>
+    </div>
   );
 }
