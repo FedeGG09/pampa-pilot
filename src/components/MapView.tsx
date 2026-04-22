@@ -1,10 +1,9 @@
-import { MapContainer, Polygon, Popup, TileLayer, useMapEvents } from 'react-leaflet'
-import L from 'leaflet'
 import { useMemo } from 'react'
-import type { SelectedLot, CropType } from '@/types/api'
-import { pseudoNdviFromCoordinates, ndviLabel, clamp } from '@/lib/utils'
+import { MapContainer, Polygon, Popup, TileLayer, useMapEvents } from 'react-leaflet'
+import type { CropType, SelectedLot } from '@/types/api'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { clamp, ndviLabel, pseudoNdviFromCoordinates } from '@/lib/utils'
 
 interface MapViewProps {
   selectedLot: SelectedLot | null
@@ -12,16 +11,29 @@ interface MapViewProps {
   onAnalyze: () => void
 }
 
-function MapClickHandler({ onSelectLot }: { onSelectLot: MapViewProps['onSelectLot'] }) {
+function MapClickHandler({
+  onSelectLot,
+}: {
+  onSelectLot: MapViewProps['onSelectLot']
+}) {
   useMapEvents({
     click(e) {
       const ndvi = pseudoNdviFromCoordinates(e.latlng.lat, e.latlng.lng)
-      const areaHa = clamp(80 + Math.round(Math.abs(e.latlng.lat * e.latlng.lng) % 220), 40, 320)
+      const areaHa = clamp(
+        80 + Math.round(Math.abs(e.latlng.lat * e.latlng.lng) % 220),
+        40,
+        320,
+      )
       const crops: CropType[] = ['soja', 'maiz', 'trigo', 'girasol']
-      const crop = crops[Math.abs(Math.floor((e.latlng.lat + e.latlng.lng) * 10)) % crops.length]
+      const cropIndex =
+        Math.abs(Math.floor((e.latlng.lat + e.latlng.lng) * 10)) % crops.length
+      const crop: CropType = crops[cropIndex] ?? 'other'
+
       onSelectLot({
         id: crypto.randomUUID(),
-        name: `Lote ${Math.abs(Math.round(e.latlng.lat * 10))}-${Math.abs(Math.round(e.latlng.lng * 10))}`,
+        name: `Lote ${Math.abs(Math.round(e.latlng.lat * 10))}-${Math.abs(
+          Math.round(e.latlng.lng * 10),
+        )}`,
         crop,
         ndvi,
         lat: e.latlng.lat,
@@ -30,12 +42,14 @@ function MapClickHandler({ onSelectLot }: { onSelectLot: MapViewProps['onSelectL
       })
     },
   })
+
   return null
 }
 
 function lotPolygon(lat: number, lng: number) {
   const deltaLat = 0.18
   const deltaLng = 0.24
+
   return [
     [lat - deltaLat, lng - deltaLng],
     [lat - deltaLat * 0.25, lng + deltaLng],
@@ -56,44 +70,102 @@ export function MapView({ selectedLot, onSelectLot, onAnalyze }: MapViewProps) {
   const center = useMemo(() => ({ lat: -34.6, lng: -61.4 }), [])
 
   return (
-    <div className="space-y-4">
-      <div className="overflow-hidden rounded-3xl border border-white/70 bg-white shadow-[0_10px_30px_rgba(78,54,45,0.08)]">
-        <div className="flex items-center justify-between gap-3 border-b border-stone-100 px-4 py-3">
+    <div className="grid gap-6 lg:grid-cols-[1.5fr_0.9fr]">
+      <section className="overflow-hidden rounded-[28px] border border-stone-200 bg-white shadow-sm">
+        <div className="flex items-center justify-between border-b border-stone-200 px-5 py-4">
           <div>
-            <h3 className="text-base font-semibold">Mapa operativo</h3>
-            <p className="text-sm text-stone-500">Click sobre Argentina para crear un lote y simular NDVI.</p>
+            <h2 className="text-lg font-semibold text-stone-900">Mapa operativo</h2>
+            <p className="text-sm text-stone-500">
+              Click sobre Argentina para crear un lote y simular NDVI.
+            </p>
           </div>
-          {selectedLot ? <Badge variant="success">{ndviLabel(selectedLot.ndvi)}</Badge> : <Badge variant="neutral">Sin lote seleccionado</Badge>}
+          <Badge className="rounded-full bg-emerald-100 text-emerald-800 hover:bg-emerald-100">
+            {selectedLot ? ndviLabel(selectedLot.ndvi) : 'Sin lote seleccionado'}
+          </Badge>
         </div>
 
-        <div className="h-[620px] w-full">
-          <MapContainer center={center} zoom={5} scrollWheelZoom className="h-full w-full">
-            <TileLayer attribution='&copy; OpenStreetMap contributors' url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+        <div className="h-[640px]">
+          <MapContainer
+            center={center}
+            zoom={5}
+            scrollWheelZoom
+            className="h-full w-full"
+          >
+            <TileLayer
+              attribution='&copy; OpenStreetMap contributors'
+              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            />
             <MapClickHandler onSelectLot={onSelectLot} />
-            {selectedLot ? (
-              <>
-                <Polygon positions={lotPolygon(selectedLot.lat, selectedLot.lng)} pathOptions={{ color: '#6B8E23', weight: 2, fillColor: ndviColor(selectedLot.ndvi), fillOpacity: 0.28 }}>
-                  <Popup>
-                    <div className="space-y-1 text-sm">
-                      <p className="font-semibold">{selectedLot.name}</p>
-                      <p>Cultivo: {selectedLot.crop}</p>
-                      <p>NDVI: {selectedLot.ndvi.toFixed(2)}</p>
-                      <p>Área estimada: {selectedLot.areaHa} ha</p>
-                    </div>
-                  </Popup>
-                </Polygon>
-                <Polygon positions={lotPolygon(selectedLot.lat, selectedLot.lng)} pathOptions={{ color: '#FFFFFF', weight: 3, fillOpacity: 0 }} />
-              </>
-            ) : null}
+
+            {selectedLot && (
+              <Polygon
+                positions={lotPolygon(selectedLot.lat, selectedLot.lng)}
+                pathOptions={{
+                  color: ndviColor(selectedLot.ndvi),
+                  fillColor: ndviColor(selectedLot.ndvi),
+                  fillOpacity: 0.35,
+                  weight: 2,
+                }}
+              >
+                <Popup>
+                  <div className="space-y-1">
+                    <div className="font-semibold">{selectedLot.name}</div>
+                    <div>NDVI: {selectedLot.ndvi.toFixed(2)}</div>
+                    <div>Cultivo: {selectedLot.crop}</div>
+                    <div>Área estimada: {selectedLot.areaHa} ha</div>
+                  </div>
+                </Popup>
+              </Polygon>
+            )}
           </MapContainer>
         </div>
-      </div>
+      </section>
 
-      <div className="grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
-        <div className="rounded-3xl border border-white/70 bg-white p-4 shadow-[0_10px_30px_rgba(78,54,45,0.08)]">
-          <p className="text-sm font-semibold text-stone-900">NDVI overlay</p>
-          <p className="mt-1 text-sm text-stone-500">El color del lote se recalcula al clickear en el mapa. El resultado alimenta el Orquestador AI.</p>
-          <div className="mt-4 grid grid-cols-5 gap-2">
+      <aside className="space-y-6">
+        <section className="rounded-[28px] border border-stone-200 bg-white p-5 shadow-sm">
+          <h3 className="text-base font-semibold text-stone-900">Lote activo</h3>
+          {selectedLot ? (
+            <div className="mt-4 space-y-3 text-sm text-stone-700">
+              <div className="rounded-2xl bg-stone-50 px-4 py-3">
+                <div className="text-xs uppercase tracking-[0.18em] text-stone-500">
+                  Nombre
+                </div>
+                <div className="mt-1 font-medium">{selectedLot.name}</div>
+              </div>
+              <div className="rounded-2xl bg-stone-50 px-4 py-3">
+                <div className="text-xs uppercase tracking-[0.18em] text-stone-500">
+                  NDVI
+                </div>
+                <div className="mt-1 font-medium">{selectedLot.ndvi.toFixed(2)}</div>
+              </div>
+              <div className="rounded-2xl bg-stone-50 px-4 py-3">
+                <div className="text-xs uppercase tracking-[0.18em] text-stone-500">
+                  Cultivo
+                </div>
+                <div className="mt-1 font-medium">{selectedLot.crop}</div>
+              </div>
+              <div className="rounded-2xl bg-stone-50 px-4 py-3">
+                <div className="text-xs uppercase tracking-[0.18em] text-stone-500">
+                  Superficie
+                </div>
+                <div className="mt-1 font-medium">{selectedLot.areaHa} ha</div>
+              </div>
+            </div>
+          ) : (
+            <p className="mt-4 text-sm text-stone-500">
+              Seleccioná un punto en el mapa para generar un lote y disparar el análisis.
+            </p>
+          )}
+        </section>
+
+        <section className="rounded-[28px] border border-stone-200 bg-white p-5 shadow-sm">
+          <h3 className="text-base font-semibold text-stone-900">NDVI overlay</h3>
+          <p className="mt-2 text-sm text-stone-500">
+            El color del lote se recalcula al clickear en el mapa. El resultado alimenta
+            el Orquestador AI.
+          </p>
+
+          <div className="mt-4 space-y-2 text-sm text-stone-700">
             {[
               ['0.15', '#D94B3D'],
               ['0.35', '#F29A36'],
@@ -101,20 +173,24 @@ export function MapView({ selectedLot, onSelectLot, onAnalyze }: MapViewProps) {
               ['0.62', '#91B63D'],
               ['0.78', '#4F7B1F'],
             ].map(([label, color]) => (
-              <div key={label} className="overflow-hidden rounded-2xl border border-stone-200">
-                <div className="h-8" style={{ background: color }} />
-                <div className="bg-stone-50 px-2 py-2 text-center text-xs text-stone-600">{label}</div>
+              <div key={label} className="flex items-center gap-3">
+                <span
+                  className="h-3 w-3 rounded-full"
+                  style={{ backgroundColor: color }}
+                />
+                <span>{label}</span>
               </div>
             ))}
           </div>
-        </div>
 
-        <div className="rounded-3xl border border-white/70 bg-white p-4 shadow-[0_10px_30px_rgba(78,54,45,0.08)]">
-          <p className="text-sm font-semibold text-stone-900">Acción rápida</p>
-          <p className="mt-1 text-sm text-stone-500">Usá el lote seleccionado para disparar la recomendación técnica o financiera.</p>
-          <Button className="mt-4 w-full" disabled={!selectedLot} onClick={onAnalyze}>Analizar lote</Button>
-        </div>
-      </div>
+          <Button
+            onClick={onAnalyze}
+            className="mt-5 w-full rounded-2xl bg-[var(--primary)] text-white hover:bg-[var(--primary)]/90"
+          >
+            Analizar lote
+          </Button>
+        </section>
+      </aside>
     </div>
   )
 }
