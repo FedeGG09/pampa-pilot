@@ -1,5 +1,11 @@
 import { useMemo } from 'react'
-import { MapContainer, Polygon, Popup, TileLayer, useMapEvents } from 'react-leaflet'
+import {
+  MapContainer,
+  Polygon,
+  Popup,
+  TileLayer,
+  useMapEvents,
+} from 'react-leaflet'
 import type { CropType, SelectedLot } from '@/types/api'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -24,10 +30,13 @@ function MapClickHandler({
         40,
         320,
       )
+
       const crops: CropType[] = ['soja', 'maiz', 'trigo', 'girasol']
       const cropIndex =
         Math.abs(Math.floor((e.latlng.lat + e.latlng.lng) * 10)) % crops.length
-      const crop: CropType = crops[cropIndex] ?? 'other'
+
+      const fallbackCrop: CropType = 'soja'
+      const crop: CropType = crops[cropIndex] ?? fallbackCrop
 
       onSelectLot({
         id: crypto.randomUUID(),
@@ -66,7 +75,11 @@ function ndviColor(ndvi: number): string {
   return '#D94B3D'
 }
 
-export function MapView({ selectedLot, onSelectLot, onAnalyze }: MapViewProps) {
+export function MapView({
+  selectedLot,
+  onSelectLot,
+  onAnalyze,
+}: MapViewProps) {
   const center = useMemo(() => ({ lat: -34.6, lng: -61.4 }), [])
 
   return (
@@ -92,7 +105,7 @@ export function MapView({ selectedLot, onSelectLot, onAnalyze }: MapViewProps) {
             className="h-full w-full"
           >
             <TileLayer
-              attribution='&copy; OpenStreetMap contributors'
+              attribution="&copy; OpenStreetMap contributors"
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             />
             <MapClickHandler onSelectLot={onSelectLot} />
@@ -124,6 +137,7 @@ export function MapView({ selectedLot, onSelectLot, onAnalyze }: MapViewProps) {
       <aside className="space-y-6">
         <section className="rounded-[28px] border border-stone-200 bg-white p-5 shadow-sm">
           <h3 className="text-base font-semibold text-stone-900">Lote activo</h3>
+
           {selectedLot ? (
             <div className="mt-4 space-y-3 text-sm text-stone-700">
               <div className="rounded-2xl bg-stone-50 px-4 py-3">
@@ -132,18 +146,21 @@ export function MapView({ selectedLot, onSelectLot, onAnalyze }: MapViewProps) {
                 </div>
                 <div className="mt-1 font-medium">{selectedLot.name}</div>
               </div>
+
               <div className="rounded-2xl bg-stone-50 px-4 py-3">
                 <div className="text-xs uppercase tracking-[0.18em] text-stone-500">
                   NDVI
                 </div>
                 <div className="mt-1 font-medium">{selectedLot.ndvi.toFixed(2)}</div>
               </div>
+
               <div className="rounded-2xl bg-stone-50 px-4 py-3">
                 <div className="text-xs uppercase tracking-[0.18em] text-stone-500">
                   Cultivo
                 </div>
                 <div className="mt-1 font-medium">{selectedLot.crop}</div>
               </div>
+
               <div className="rounded-2xl bg-stone-50 px-4 py-3">
                 <div className="text-xs uppercase tracking-[0.18em] text-stone-500">
                   Superficie
@@ -174,10 +191,7 @@ export function MapView({ selectedLot, onSelectLot, onAnalyze }: MapViewProps) {
               ['0.78', '#4F7B1F'],
             ].map(([label, color]) => (
               <div key={label} className="flex items-center gap-3">
-                <span
-                  className="h-3 w-3 rounded-full"
-                  style={{ backgroundColor: color }}
-                />
+                <span className="h-3 w-3 rounded-full" style={{ backgroundColor: color }} />
                 <span>{label}</span>
               </div>
             ))}

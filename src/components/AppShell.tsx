@@ -60,13 +60,14 @@ export function AppShell() {
               <Link
                 key={to}
                 to={to}
-                activeProps={() => ({
+                preload="intent"
+                activeProps={{
                   className:
                     'bg-[var(--primary)] text-white shadow-sm border-transparent',
-                })}
-                inactiveProps={() => ({
+                }}
+                inactiveProps={{
                   className: 'text-stone-700 hover:bg-stone-100',
-                })}
+                }}
                 className={cn(
                   'flex items-center gap-3 rounded-2xl border border-transparent px-4 py-3 text-sm font-medium transition',
                 )}
