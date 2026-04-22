@@ -1,27 +1,60 @@
-@import "tailwindcss" source(none);
-@source "../src";
-@import "tw-animate-css";
+:root {
+  --radius: 1.25rem;
 
-@import url("https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap");
+  /* Cottagecore / field journal palette */
+  --background: oklch(0.98 0.006 82);
+  --foreground: oklch(0.28 0.03 48);
 
-@custom-variant dark (&:is(.dark *));
+  --surface: oklch(0.97 0.01 78);
+  --card: oklch(0.995 0.003 80);
+  --card-foreground: oklch(0.28 0.03 48);
 
-/*
- * Design system — "Sage Studio" light theme.
- *
- * Inspired by an eucalyptus / sage moodboard:
- * crisp white canvas, soft warm greys, eucalyptus & sage greens
- * as the primary accent, deep slate-teal for emphasis.
- */
+  --popover: oklch(0.995 0.003 80);
+  --popover-foreground: oklch(0.28 0.03 48);
+
+  --primary: oklch(0.60 0.08 145); /* sage */
+  --primary-foreground: oklch(0.98 0.004 80);
+
+  --secondary: oklch(0.92 0.018 64);
+  --secondary-foreground: oklch(0.28 0.03 48);
+
+  --muted: oklch(0.95 0.01 78);
+  --muted-foreground: oklch(0.48 0.03 48);
+
+  --accent: oklch(0.90 0.06 25); /* rose-beige */
+  --accent-foreground: oklch(0.28 0.03 48);
+
+  --destructive: oklch(0.62 0.18 28);
+  --destructive-foreground: oklch(0.98 0.004 80);
+
+  --status-error: oklch(0.62 0.18 28);
+  --status-warning: oklch(0.82 0.13 76);
+
+  --border: oklch(0.35 0.02 48 / 0.12);
+  --input: oklch(0.35 0.02 48 / 0.16);
+  --ring: oklch(0.60 0.08 145);
+
+  --chart-1: oklch(0.60 0.08 145);
+  --chart-2: oklch(0.52 0.06 170);
+  --chart-3: oklch(0.78 0.05 92);
+  --chart-4: oklch(0.72 0.08 28);
+  --chart-5: oklch(0.55 0.05 215);
+
+  --sidebar: oklch(0.985 0.006 78);
+  --sidebar-foreground: oklch(0.28 0.03 48);
+  --sidebar-primary: oklch(0.60 0.08 145);
+  --sidebar-primary-foreground: oklch(0.98 0.004 80);
+  --sidebar-accent: oklch(0.94 0.014 70);
+  --sidebar-accent-foreground: oklch(0.28 0.03 48);
+  --sidebar-border: oklch(0.35 0.02 48 / 0.10);
+  --sidebar-ring: oklch(0.60 0.08 145);
+}
 
 @theme inline {
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
-  --radius-2xl: calc(var(--radius) + 8px);
-  --radius-3xl: calc(var(--radius) + 12px);
-  --radius-4xl: calc(var(--radius) + 16px);
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Cormorant Garamond", Georgia, serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -57,59 +90,6 @@
   --color-sidebar-ring: var(--sidebar-ring);
 }
 
-@theme inline {
-  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
-  --font-display: "Manrope", ui-sans-serif, system-ui, sans-serif;
-  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
-  --color-surface: var(--surface);
-  --color-accent-lime: var(--accent-lime);
-  --color-accent-green: var(--accent-green);
-  --color-status-error: var(--status-error);
-  --color-status-warning: var(--status-warning);
-}
-
-:root {
-  --radius: 1rem;
-  /* Sage Studio palette — light theme */
-  --background: oklch(0.99 0.003 120);            /* near-white #FBFCFB */
-  --foreground: oklch(0.25 0.02 200);             /* deep slate-teal */
-  --surface: oklch(0.96 0.01 150);                /* warm off-white */
-  --card: oklch(1 0 0);                           /* pure white card */
-  --card-foreground: oklch(0.25 0.02 200);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.25 0.02 200);
-  --primary: oklch(0.62 0.07 165);                /* eucalyptus / sage green */
-  --primary-foreground: oklch(0.99 0.003 120);
-  --secondary: oklch(0.94 0.012 150);             /* soft sage tint */
-  --secondary-foreground: oklch(0.3 0.02 200);
-  --muted: oklch(0.96 0.008 150);
-  --muted-foreground: oklch(0.48 0.015 200);
-  --accent: oklch(0.88 0.04 160);                 /* mint accent */
-  --accent-foreground: oklch(0.25 0.03 200);
-  --accent-lime: oklch(0.62 0.07 165);            /* sage as the "accent" */
-  --accent-green: oklch(0.5 0.06 180);            /* deeper teal-green */
-  --destructive: oklch(0.6 0.18 27);
-  --destructive-foreground: oklch(0.99 0 0);
-  --status-error: oklch(0.6 0.18 27);
-  --status-warning: oklch(0.78 0.14 75);
-  --border: oklch(0.25 0.02 200 / 0.1);
-  --input: oklch(0.25 0.02 200 / 0.12);
-  --ring: oklch(0.62 0.07 165);
-  --chart-1: oklch(0.62 0.07 165);
-  --chart-2: oklch(0.5 0.06 180);
-  --chart-3: oklch(0.78 0.04 160);
-  --chart-4: oklch(0.78 0.14 75);
-  --chart-5: oklch(0.6 0.18 27);
-  --sidebar: oklch(0.97 0.008 150);               /* soft sage-white */
-  --sidebar-foreground: oklch(0.3 0.02 200);
-  --sidebar-primary: oklch(0.62 0.07 165);
-  --sidebar-primary-foreground: oklch(0.99 0.003 120);
-  --sidebar-accent: oklch(0.92 0.025 160);
-  --sidebar-accent-foreground: oklch(0.25 0.03 200);
-  --sidebar-border: oklch(0.25 0.02 200 / 0.08);
-  --sidebar-ring: oklch(0.62 0.07 165);
-}
-
 @layer base {
   * {
     border-color: var(--color-border);
@@ -117,10 +97,29 @@
 
   html,
   body {
-    background-color: var(--color-background);
+    min-height: 100%;
+    background:
+      radial-gradient(circle at top left, rgba(210, 188, 169, 0.28), transparent 30%),
+      radial-gradient(circle at top right, rgba(167, 189, 151, 0.24), transparent 26%),
+      linear-gradient(180deg, #fbf8f2 0%, #f5efe5 48%, #efe6d7 100%);
     color: var(--color-foreground);
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.18;
+    background-image:
+      radial-gradient(rgba(107, 82, 61, 0.12) 0.6px, transparent 0.6px),
+      radial-gradient(rgba(107, 82, 61, 0.08) 0.4px, transparent 0.4px);
+    background-position: 0 0, 18px 18px;
+    background-size: 36px 36px;
+    mix-blend-mode: multiply;
   }
 
   h1,
@@ -131,58 +130,77 @@
     font-family: var(--font-display);
     letter-spacing: -0.02em;
   }
-
-  .font-mono,
-  .font-data {
-    font-family: var(--font-mono);
-  }
 }
 
 @layer utilities {
-  .glass {
-    background-color: color-mix(in oklab, var(--card) 80%, transparent);
+  .paper-card {
+    position: relative;
+    overflow: hidden;
+    border-radius: 28px;
+    border: 1px solid rgba(91, 69, 52, 0.1);
+    background: rgba(255, 251, 245, 0.82);
+    box-shadow: 0 18px 48px -28px rgba(72, 54, 39, 0.42);
     backdrop-filter: blur(14px);
     -webkit-backdrop-filter: blur(14px);
-    border: 1px solid var(--border);
   }
 
-  .neon-border {
-    border: 1px solid color-mix(in oklab, var(--primary) 35%, transparent);
-    box-shadow:
-      0 1px 0 0 color-mix(in oklab, var(--primary) 10%, transparent),
-      0 8px 24px -12px color-mix(in oklab, var(--primary) 30%, transparent);
+  .paper-card::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background:
+      linear-gradient(135deg, rgba(255, 255, 255, 0.5), transparent 36%),
+      linear-gradient(180deg, rgba(255, 255, 255, 0.14), transparent 18%);
   }
 
-  .neon-text {
-    color: var(--accent-green);
-    text-shadow: none;
+  .paper-card-soft {
+    border-radius: 24px;
+    border: 1px solid rgba(91, 69, 52, 0.08);
+    background: rgba(255, 248, 239, 0.74);
   }
 
-  .card-hover {
-    transition:
-      transform 0.2s ease,
-      border-color 0.2s ease,
-      box-shadow 0.2s ease;
-  }
-  .card-hover:hover {
-    transform: translateY(-2px);
-    border-color: color-mix(in oklab, var(--primary) 50%, transparent);
-    box-shadow: 0 14px 32px -18px color-mix(in oklab, var(--primary) 45%, transparent);
-  }
-
-  .grid-bg {
-    background-image:
-      linear-gradient(to right, oklch(0.25 0.02 200 / 0.04) 1px, transparent 1px),
-      linear-gradient(to bottom, oklch(0.25 0.02 200 / 0.04) 1px, transparent 1px);
-    background-size: 32px 32px;
-  }
-
-  .scrollbar-thin::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
-  }
-  .scrollbar-thin::-webkit-scrollbar-thumb {
-    background: oklch(0.25 0.02 200 / 0.18);
+  .paper-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
     border-radius: 999px;
+    border: 1px solid rgba(91, 69, 52, 0.10);
+    background: rgba(255, 255, 255, 0.8);
+    padding: 0.35rem 0.75rem;
+    font-size: 0.75rem;
+    color: #7a6353;
+  }
+
+  .paper-kicker {
+    display: inline-flex;
+    align-items: center;
+    border-radius: 999px;
+    background: rgba(233, 215, 198, 0.78);
+    padding: 0.35rem 0.8rem;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: #7a5e4c;
+  }
+
+  .hero-script {
+    font-family: var(--font-display);
+    font-style: italic;
+  }
+
+  .paper-rule {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(91, 69, 52, 0.16), transparent);
+  }
+
+  .paper-shadow {
+    box-shadow: 0 22px 56px -30px rgba(72, 54, 39, 0.45);
+  }
+
+  .field-note {
+    border: 1px dashed rgba(91, 69, 52, 0.18);
+    background: rgba(251, 247, 240, 0.9);
   }
 }

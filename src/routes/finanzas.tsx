@@ -1,6 +1,8 @@
-// src/routes/finanzas.tsx
 import * as React from "react";
 import { createFileRoute } from "@tanstack/react-router";
+import { ArrowUpRight, RotateCcw, Wallet } from "lucide-react";
+
+import { PageHeader } from "@/components/PageHeader";
 import { simulateFinance } from "@/lib/agrocopilot.api";
 import type { FinancialSimulationResponse } from "@/lib/types";
 import { useAsyncAction } from "@/hooks/useAsyncAction";
@@ -10,8 +12,13 @@ export const Route = createFileRoute("/finanzas")({
   component: FinanzasPage,
 });
 
+const fieldClassName =
+  "w-full rounded-2xl border border-[rgba(91,69,52,0.12)] bg-white/82 px-4 py-3.5 text-[#4e362d] outline-none transition placeholder:text-[#9c8778] focus:border-[#bfa48f] focus:ring-2 focus:ring-[#e9d7c6]/70";
+
 function FinanzasPage() {
-  const [crop, setCrop] = React.useState<"soja" | "maiz" | "trigo" | "girasol" | "sorgo">("soja");
+  const [crop, setCrop] = React.useState<
+    "soja" | "maiz" | "trigo" | "girasol" | "sorgo"
+  >("soja");
   const [price, setPrice] = React.useState("430000");
   const [yieldQq, setYieldQq] = React.useState("38");
   const [oldDex, setOldDex] = React.useState("26");
@@ -20,10 +27,12 @@ function FinanzasPage() {
   const [ureaShock, setUreaShock] = React.useState("15");
   const [gasoilPrice, setGasoilPrice] = React.useState("1.05");
   const [gasoilShock, setGasoilShock] = React.useState("34");
+
   const { data, loading, error, run, reset } = useAsyncAction(simulateFinance);
 
   const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+
     await run({
       crop,
       price_ars_ton: price,
@@ -43,109 +52,198 @@ function FinanzasPage() {
 
   const result = data as FinancialSimulationResponse | null;
 
+  const actionLabel = React.useMemo(() => {
+    if (!result) return "";
+    return result.recommended_action.replaceAll("_", " ");
+  }, [result]);
+
   return (
-    <main className="min-h-screen bg-[#090D0B] text-white p-6">
-      <div className="mx-auto max-w-6xl space-y-6">
-        <header className="space-y-2">
-          <h1 className="text-3xl font-semibold">Simulación financiera</h1>
-          <p className="text-white/70">
-            Calculá el impacto de DEX y del shock de urea/gasoil con un esquema por hectárea.
+    <div className="space-y-6 pb-20 md:pb-0">
+      <PageHeader
+        eyebrow="Finanzas / macro"
+        title="Simulación financiera"
+        subtitle="Calculá el impacto de la baja de retenciones frente al shock de urea y gasoil por hectárea. La interfaz prioriza la lectura rápida del margen."
+        actions={
+          <div className="paper-chip">
+            <Wallet className="h-4 w-4" />
+            Pizarra + costos
+          </div>
+        }
+      />
+
+      <section className="paper-card p-5 md:p-7">
+        <div className="mb-5 rounded-[22px] border border-[rgba(91,69,52,0.08)] bg-[#fbf7f1] p-4">
+          <p className="text-sm font-medium text-[#4e362d]">
+            Lectura ejecutiva
           </p>
-        </header>
+          <p className="mt-1 text-sm leading-6 text-[#725d4f]">
+            El objetivo es mostrar de inmediato si la mejora fiscal compensa el
+            aumento de costos y cuál es la acción sugerida: comprar, cubrir,
+            mantener o postergar.
+          </p>
+        </div>
 
-        <section className="rounded-2xl border border-white/10 bg-white/5 p-5">
-          <form className="grid gap-4 md:grid-cols-3" onSubmit={onSubmit}>
-            <Field label="Cultivo">
-              <select
-                value={crop}
-                onChange={(e) => setCrop(e.target.value as typeof crop)}
-                className="w-full rounded-xl border border-white/10 bg-black/30 px-4 py-3 outline-none"
-              >
-                <option value="soja">Soja</option>
-                <option value="maiz">Maíz</option>
-                <option value="trigo">Trigo</option>
-                <option value="girasol">Girasol</option>
-                <option value="sorgo">Sorgo</option>
-              </select>
-            </Field>
+        <form className="grid gap-4 md:grid-cols-3" onSubmit={onSubmit}>
+          <Field label="Cultivo">
+            <select
+              value={crop}
+              onChange={(e) => setCrop(e.target.value as typeof crop)}
+              className={fieldClassName}
+            >
+              <option value="soja">Soja</option>
+              <option value="maiz">Maíz</option>
+              <option value="trigo">Trigo</option>
+              <option value="girasol">Girasol</option>
+              <option value="sorgo">Sorgo</option>
+            </select>
+          </Field>
 
-            <Field label="Precio pizarra ARS/t">
-              <input value={price} onChange={(e) => setPrice(e.target.value)} className="input" />
-            </Field>
+          <Field label="Precio pizarra ARS/t">
+            <input
+              value={price}
+              onChange={(e) => setPrice(e.target.value)}
+              className={fieldClassName}
+            />
+          </Field>
 
-            <Field label="Rinde qq/ha">
-              <input value={yieldQq} onChange={(e) => setYieldQq(e.target.value)} className="input" />
-            </Field>
+          <Field label="Rinde qq/ha">
+            <input
+              value={yieldQq}
+              onChange={(e) => setYieldQq(e.target.value)}
+              className={fieldClassName}
+            />
+          </Field>
 
-            <Field label="DEX viejo %">
-              <input value={oldDex} onChange={(e) => setOldDex(e.target.value)} className="input" />
-            </Field>
+          <Field label="DEX viejo %">
+            <input
+              value={oldDex}
+              onChange={(e) => setOldDex(e.target.value)}
+              className={fieldClassName}
+            />
+          </Field>
 
-            <Field label="DEX nuevo %">
-              <input value={newDex} onChange={(e) => setNewDex(e.target.value)} className="input" />
-            </Field>
+          <Field label="DEX nuevo %">
+            <input
+              value={newDex}
+              onChange={(e) => setNewDex(e.target.value)}
+              className={fieldClassName}
+            />
+          </Field>
 
-            <Field label="Urea USD/t">
-              <input value={ureaPrice} onChange={(e) => setUreaPrice(e.target.value)} className="input" />
-            </Field>
+          <Field label="Urea USD/t">
+            <input
+              value={ureaPrice}
+              onChange={(e) => setUreaPrice(e.target.value)}
+              className={fieldClassName}
+            />
+          </Field>
 
-            <Field label="Shock urea %">
-              <input value={ureaShock} onChange={(e) => setUreaShock(e.target.value)} className="input" />
-            </Field>
+          <Field label="Shock urea %">
+            <input
+              value={ureaShock}
+              onChange={(e) => setUreaShock(e.target.value)}
+              className={fieldClassName}
+            />
+          </Field>
 
-            <Field label="Gasoil USD/l">
-              <input value={gasoilPrice} onChange={(e) => setGasoilPrice(e.target.value)} className="input" />
-            </Field>
+          <Field label="Gasoil USD/l">
+            <input
+              value={gasoilPrice}
+              onChange={(e) => setGasoilPrice(e.target.value)}
+              className={fieldClassName}
+            />
+          </Field>
 
-            <Field label="Shock gasoil %">
-              <input value={gasoilShock} onChange={(e) => setGasoilShock(e.target.value)} className="input" />
-            </Field>
+          <Field label="Shock gasoil %">
+            <input
+              value={gasoilShock}
+              onChange={(e) => setGasoilShock(e.target.value)}
+              className={fieldClassName}
+            />
+          </Field>
 
-            <div className="flex gap-3 md:col-span-3">
-              <button type="submit" disabled={loading} className="rounded-xl bg-lime-300 px-5 py-3 font-medium text-black">
-                {loading ? "Calculando..." : "Simular"}
-              </button>
-              <button type="button" onClick={reset} className="rounded-xl border border-white/15 px-5 py-3 font-medium text-white/80">
-                Limpiar
-              </button>
-            </div>
-          </form>
+          <div className="flex flex-wrap gap-3 md:col-span-3">
+            <button
+              type="submit"
+              disabled={loading}
+              className="inline-flex items-center justify-center gap-2 rounded-full bg-[#6f8b61] px-5 py-3.5 text-sm font-medium text-white transition-transform hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              <ArrowUpRight className="h-4 w-4" />
+              {loading ? "Calculando..." : "Simular"}
+            </button>
+
+            <button
+              type="button"
+              onClick={reset}
+              className="inline-flex items-center justify-center gap-2 rounded-full border border-[rgba(91,69,52,0.12)] bg-white/75 px-5 py-3.5 text-sm font-medium text-[#4e362d] transition-transform hover:-translate-y-0.5"
+            >
+              <RotateCcw className="h-4 w-4" />
+              Limpiar
+            </button>
+          </div>
+        </form>
+      </section>
+
+      {error ? (
+        <section className="paper-card border border-[rgba(168,73,73,0.20)] bg-[#fff4f1] p-5 text-[#8f3e3e]">
+          <div className="text-sm font-semibold uppercase tracking-[0.16em]">
+            Error
+          </div>
+          <p className="mt-2 leading-7">{error}</p>
         </section>
+      ) : null}
 
-        {error ? (
-          <section className="rounded-2xl border border-red-400/30 bg-red-500/10 p-5 text-red-100">
-            {error}
-          </section>
-        ) : null}
+      {result ? (
+        <section className="grid gap-4 md:grid-cols-2">
+          <Metric
+            title="Ingreso bruto"
+            value={formatARS(result.breakdown.gross_revenue_ars_ha)}
+          />
+          <Metric
+            title="Impacto neto"
+            value={formatARS(result.breakdown.net_impact_ars_ha)}
+          />
+          <Metric
+            title="Impacto USD/ha"
+            value={formatUSD(result.breakdown.net_impact_usd_ha)}
+          />
+          <Metric title="Acción sugerida" value={actionLabel} />
 
-        {result ? (
-          <section className="grid gap-4 md:grid-cols-2">
-            <Metric title="Ingreso bruto" value={formatARS(result.breakdown.gross_revenue_ars_ha)} />
-            <Metric title="Impacto neto" value={formatARS(result.breakdown.net_impact_ars_ha)} />
-            <Metric title="Impacto USD/ha" value={formatUSD(result.breakdown.net_impact_usd_ha)} />
-            <Metric title="Acción sugerida" value={result.recommended_action.replaceAll("_", " ")} />
-
-            <div className="md:col-span-2 rounded-2xl border border-white/10 bg-white/5 p-5">
-              <p className="text-sm text-white/60">Lectura ejecutiva</p>
-              <p className="mt-2 text-white/90">{result.rationale}</p>
-              <div className="mt-3 flex flex-wrap gap-2">
-                <Badge>{result.risk_level}</Badge>
-                {result.assumptions.map((a) => (
-                  <Badge key={a}>{a}</Badge>
-                ))}
-              </div>
+          <div className="paper-card md:col-span-2 p-5 md:p-6">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="paper-kicker">Lectura ejecutiva</span>
+              <span className="paper-chip">Riesgo: {result.risk_level}</span>
+              <span className="paper-chip">FX: {result.fx_ars_usd} ARS/USD</span>
             </div>
-          </section>
-        ) : null}
-      </div>
-    </main>
+
+            <p className="mt-4 max-w-4xl text-sm leading-7 text-[#725d4f] md:text-base">
+              {result.rationale}
+            </p>
+
+            <div className="mt-5 flex flex-wrap gap-2">
+              {result.assumptions.map((a) => (
+                <span key={a} className="paper-chip bg-white/90 text-[#6b5447]">
+                  {a}
+                </span>
+              ))}
+            </div>
+          </div>
+        </section>
+      ) : null}
+    </div>
   );
 }
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
+function Field({
+  label,
+  children,
+}: {
+  label: string;
+  children: React.ReactNode;
+}) {
   return (
     <label className="grid gap-2">
-      <span className="text-sm text-white/70">{label}</span>
+      <span className="text-sm font-medium text-[#6d5748]">{label}</span>
       {children}
     </label>
   );
@@ -153,17 +251,13 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 
 function Metric({ title, value }: { title: string; value: string }) {
   return (
-    <div className="rounded-2xl border border-white/10 bg-black/20 p-5">
-      <p className="text-sm text-white/60">{title}</p>
-      <p className="mt-2 text-2xl font-semibold">{value}</p>
+    <div className="paper-card p-5">
+      <p className="text-sm font-semibold uppercase tracking-[0.16em] text-[#8b6c57]">
+        {title}
+      </p>
+      <p className="mt-3 font-display text-3xl italic text-[#4e362d] md:text-4xl">
+        {value}
+      </p>
     </div>
   );
 }
-
-function Badge({ children }: { children: React.ReactNode }) {
-  return <span className="rounded-full border border-white/10 bg-black/20 px-3 py-1 text-xs text-white/80">{children}</span>;
-}
-
-const inputClassName =
-  "rounded-xl border border-white/10 bg-black/30 px-4 py-3 outline-none";
-Object.defineProperty(globalThis, "input", { value: inputClassName, writable: false });
