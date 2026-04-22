@@ -12,118 +12,109 @@ export const Route = createFileRoute("/asesor")({
 });
 
 const fieldClassName =
-  "w-full rounded-2xl border border-[rgba(91,69,52,0.12)] bg-white/82 px-4 py-3.5 text-[#4e362d] outline-none transition placeholder:text-[#9c8778] focus:border-[#bfa48f] focus:ring-2 focus:ring-[#e9d7c6]/70";
+  "w-full rounded-xl border border-[#d6c6b8] bg-white px-4 py-3 text-[#4e362d] outline-none transition focus:border-[#6B8E23] focus:ring-2 focus:ring-[#6B8E23]/30";
 
 function AsesorPage() {
   const [code, setCode] = React.useState("000107.00");
   const [equipment, setEquipment] = React.useState("John Deere S780");
   const [symptom, setSymptom] = React.useState(
-    "Filtro de aire tapado y pérdida de potencia",
+    "Filtro de aire tapado y pérdida de potencia"
   );
   const [context, setContext] = React.useState(
-    "Cosecha de soja, polvo fino y alta temperatura",
+    "Cosecha de soja, polvo fino y alta temperatura"
   );
 
   const { data, loading, error, run, reset } = useAsyncAction(diagnoseDtc);
 
   const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-
-    await run({
-      code,
-      equipment,
-      symptom,
-      context,
-    });
+    await run({ code, equipment, symptom, context });
   };
 
   const result = data as DtcResponse | null;
 
   return (
-    <div className="space-y-6 pb-20 md:pb-0">
+    <div className="space-y-8">
+      {/* HEADER */}
       <PageHeader
-        eyebrow="Asesor técnico / RAG"
-        title="Diagnóstico de DTC"
-        subtitle="Ingresá el código, el equipo y el contexto. El backend devuelve diagnóstico, causas probables, acciones inmediatas y criterio de stop."
+        eyebrow="Asesor técnico · RAG"
+        title="Diagnóstico de maquinaria"
+        subtitle="Sistema experto para diagnóstico de fallas basado en manuales técnicos y contexto operativo."
         actions={
-          <div className="paper-chip">
-            <Sparkles className="h-4 w-4" />
-            Motor técnico operativo
+          <div className="flex items-center gap-2 rounded-full bg-[#e9f0e3] px-3 py-1 text-xs text-[#4e362d]">
+            <Sparkles className="h-4 w-4 text-[#6B8E23]" />
+            Motor activo
           </div>
         }
       />
 
-      <section className="paper-card p-5 md:p-7">
-        <div className="mb-5 flex items-start gap-3 rounded-[22px] border border-[rgba(91,69,52,0.08)] bg-[#fbf7f1] p-4">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-[#e9d7c6] text-[#4e362d]">
-            <Leaf className="h-5 w-5" />
+      {/* FORM */}
+      <section className="rounded-2xl border border-[#e6ddd4] bg-white p-6 shadow-sm">
+        <div className="mb-6 flex items-start gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#e9f0e3]">
+            <Leaf className="h-5 w-5 text-[#6B8E23]" />
           </div>
           <div>
-            <p className="text-sm font-medium text-[#4e362d]">
-              Modo lectura de taller
+            <p className="font-medium text-[#4e362d]">
+              Modo diagnóstico técnico
             </p>
-            <p className="mt-1 text-sm leading-6 text-[#725d4f]">
-              La pantalla prioriza la secuencia: falla, contexto, causas, acción
-              inmediata y corrección. Nada de ruido visual.
+            <p className="text-sm text-[#7b6a5f]">
+              Ingresá datos reales de campo para obtener un diagnóstico preciso.
             </p>
           </div>
         </div>
 
-        <form className="grid gap-4 md:grid-cols-2" onSubmit={onSubmit}>
-          <label className="grid gap-2">
-            <span className="text-sm font-medium text-[#6d5748]">Código DTC</span>
+        <form onSubmit={onSubmit} className="grid gap-4 md:grid-cols-2">
+          <Input label="Código DTC">
             <input
               value={code}
               onChange={(e) => setCode(e.target.value)}
               className={fieldClassName}
               placeholder="000107.00"
             />
-          </label>
+          </Input>
 
-          <label className="grid gap-2">
-            <span className="text-sm font-medium text-[#6d5748]">Equipo</span>
+          <Input label="Equipo">
             <input
               value={equipment}
               onChange={(e) => setEquipment(e.target.value)}
               className={fieldClassName}
               placeholder="John Deere S780"
             />
-          </label>
+          </Input>
 
-          <label className="grid gap-2 md:col-span-2">
-            <span className="text-sm font-medium text-[#6d5748]">Síntoma</span>
+          <Input label="Síntoma" full>
             <input
               value={symptom}
               onChange={(e) => setSymptom(e.target.value)}
               className={fieldClassName}
-              placeholder="Pérdida de potencia, motor ahogado, etc."
+              placeholder="Pérdida de potencia, vibración, etc."
             />
-          </label>
+          </Input>
 
-          <label className="grid gap-2 md:col-span-2">
-            <span className="text-sm font-medium text-[#6d5748]">Contexto</span>
+          <Input label="Contexto" full>
             <textarea
               value={context}
               onChange={(e) => setContext(e.target.value)}
-              className={`${fieldClassName} min-h-32 resize-y`}
-              placeholder="Cosecha, polvo, temperatura, humedad, carga del motor..."
+              className={`${fieldClassName} min-h-28 resize-y`}
+              placeholder="Condiciones de operación..."
             />
-          </label>
+          </Input>
 
-          <div className="flex flex-wrap gap-3 md:col-span-2">
+          <div className="flex gap-3 md:col-span-2">
             <button
               type="submit"
-              className="inline-flex items-center justify-center gap-2 rounded-full bg-[#6f8b61] px-5 py-3.5 text-sm font-medium text-white transition-transform hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60"
               disabled={loading}
+              className="flex items-center gap-2 rounded-xl bg-[#6B8E23] px-5 py-3 text-white transition hover:opacity-90 disabled:opacity-60"
             >
               <ShieldAlert className="h-4 w-4" />
-              {loading ? "Diagnóstico en curso..." : "Consultar DTC"}
+              {loading ? "Analizando..." : "Diagnosticar"}
             </button>
 
             <button
               type="button"
               onClick={reset}
-              className="inline-flex items-center justify-center gap-2 rounded-full border border-[rgba(91,69,52,0.12)] bg-white/75 px-5 py-3.5 text-sm font-medium text-[#4e362d] transition-transform hover:-translate-y-0.5"
+              className="flex items-center gap-2 rounded-xl border border-[#d6c6b8] px-5 py-3 text-[#4e362d]"
             >
               <RotateCcw className="h-4 w-4" />
               Limpiar
@@ -132,61 +123,70 @@ function AsesorPage() {
         </form>
       </section>
 
-      {error ? (
-        <section className="paper-card border border-[rgba(168,73,73,0.20)] bg-[#fff4f1] p-5 text-[#8f3e3e]">
-          <div className="text-sm font-semibold uppercase tracking-[0.16em]">
-            Error
-          </div>
-          <p className="mt-2 leading-7">{error}</p>
-        </section>
-      ) : null}
+      {/* ERROR */}
+      {error && (
+        <div className="rounded-xl border border-red-300 bg-red-50 p-4 text-red-700">
+          {error}
+        </div>
+      )}
 
-      {result ? (
-        <section className="grid gap-5">
-          <div className="paper-card p-5 md:p-7">
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="paper-kicker">Diagnóstico</span>
-              <span className="paper-chip">Módulo: {result.module}</span>
-              <span className="paper-chip">Severidad: {result.severity}</span>
-              <span className="paper-chip">
-                Confianza: {(result.confidence * 100).toFixed(0)}%
-              </span>
+      {/* RESULT */}
+      {result && (
+        <section className="space-y-4">
+          {/* HEADER RESULT */}
+          <div className="rounded-2xl border border-[#e6ddd4] bg-white p-6 shadow-sm">
+            <div className="flex flex-wrap gap-2 text-xs text-[#7b6a5f]">
+              <Badge>{result.module}</Badge>
+              <Badge>{result.severity}</Badge>
+              <Badge>
+                {(result.confidence * 100).toFixed(0)}% confianza
+              </Badge>
             </div>
 
-            <h2 className="mt-4 font-display text-3xl italic text-[#4e362d] md:text-4xl">
+            <h2 className="mt-3 text-2xl font-semibold text-[#4e362d]">
               {result.diagnosis}
             </h2>
 
-            <p className="mt-3 max-w-3xl text-sm leading-7 text-[#725d4f] md:text-base">
-              {result.notes}
-            </p>
+            <p className="mt-2 text-sm text-[#6f5c50]">{result.notes}</p>
           </div>
 
+          {/* GRID */}
           <div className="grid gap-4 md:grid-cols-2">
             <InfoList title="Causas probables" items={result.likely_causes} />
-            <InfoList title="Acciones inmediatas" items={result.immediate_actions} />
-            <InfoList title="Corrección definitiva" items={result.corrective_actions} />
+            <InfoList title="Acción inmediata" items={result.immediate_actions} />
+            <InfoList title="Corrección" items={result.corrective_actions} />
             <InfoList title="Condiciones de stop" items={result.stop_conditions} />
           </div>
-
-          <div className="paper-card p-5 md:p-6">
-            <div className="text-sm font-semibold uppercase tracking-[0.16em] text-[#8b6c57]">
-              Fuentes
-            </div>
-            <ul className="mt-3 flex flex-wrap gap-2">
-              {result.source_refs.map((source) => (
-                <li
-                  key={source}
-                  className="paper-chip bg-white/90 text-[#6b5447]"
-                >
-                  {source}
-                </li>
-              ))}
-            </ul>
-          </div>
         </section>
-      ) : null}
+      )}
     </div>
+  );
+}
+
+/* ---------------- COMPONENTES ---------------- */
+
+function Input({
+  label,
+  children,
+  full,
+}: {
+  label: string;
+  children: React.ReactNode;
+  full?: boolean;
+}) {
+  return (
+    <label className={`grid gap-2 ${full ? "md:col-span-2" : ""}`}>
+      <span className="text-sm font-medium text-[#6d5748]">{label}</span>
+      {children}
+    </label>
+  );
+}
+
+function Badge({ children }: { children: React.ReactNode }) {
+  return (
+    <span className="rounded-full bg-[#f0ede9] px-3 py-1">
+      {children}
+    </span>
   );
 }
 
@@ -198,16 +198,11 @@ function InfoList({
   items: string[];
 }) {
   return (
-    <div className="paper-card p-5">
-      <div className="text-sm font-semibold uppercase tracking-[0.16em] text-[#8b6c57]">
-        {title}
-      </div>
-      <ul className="mt-3 space-y-2 text-sm leading-7 text-[#5d4a3e]">
+    <div className="rounded-2xl border border-[#e6ddd4] bg-white p-5">
+      <p className="text-sm font-semibold text-[#6d5748]">{title}</p>
+      <ul className="mt-3 space-y-2 text-sm text-[#4e362d]">
         {items.map((item) => (
-          <li
-            key={item}
-            className="rounded-2xl border border-[rgba(91,69,52,0.08)] bg-[#fbf7f1] px-4 py-3"
-          >
+          <li key={item} className="rounded-lg bg-[#f8f5f2] p-3">
             {item}
           </li>
         ))}
