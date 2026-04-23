@@ -98,12 +98,7 @@ export function MapView({
         </div>
 
         <div className="h-[640px]">
-          <MapContainer
-            center={center}
-            zoom={5}
-            scrollWheelZoom
-            className="h-full w-full"
-          >
+          <MapContainer center={center} zoom={5} scrollWheelZoom className="h-full w-full">
             <TileLayer
               attribution="&copy; OpenStreetMap contributors"
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -167,6 +162,13 @@ export function MapView({
                 </div>
                 <div className="mt-1 font-medium">{selectedLot.areaHa} ha</div>
               </div>
+
+              <Button
+                onClick={onAnalyze}
+                className="mt-2 w-full rounded-2xl bg-[var(--primary)] text-white hover:bg-[var(--primary)]/90"
+              >
+                Analizar lote
+              </Button>
             </div>
           ) : (
             <p className="mt-4 text-sm text-stone-500">
@@ -196,16 +198,8 @@ export function MapView({
               </div>
             ))}
           </div>
-
-          <Button
-            onClick={onAnalyze}
-            className="mt-5 w-full rounded-2xl bg-[var(--primary)] text-white hover:bg-[var(--primary)]/90"
-          >
-            Analizar lote
-          </Button>
         </section>
       </aside>
     </div>
   )
 }
-// fix build

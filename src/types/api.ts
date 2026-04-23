@@ -1,5 +1,7 @@
 export type Severity = 'low' | 'medium' | 'high' | 'critical'
 export type CropType = 'soja' | 'maiz' | 'trigo' | 'girasol' | 'algodon' | 'other'
+export type DecisionType = 'agronomic' | 'financial' | 'monitor' | 'mixed'
+export type SuggestedFlow = 'dtc' | 'finance' | 'none'
 
 export interface DtcDiagnosisRequest {
   code: string
@@ -58,13 +60,72 @@ export interface OrchestratorAnalyzeRequest {
 }
 
 export interface OrchestratorAnalyzeResponse {
-  decision: 'agronomic' | 'financial' | 'monitor' | 'mixed'
+  decision: DecisionType
   recommendation: string
   reason: string
   confidence: number
-  suggested_flow: 'dtc' | 'finance' | 'none'
+  suggested_flow: SuggestedFlow
   next_actions: string[]
   summary: string
+}
+
+export interface KPI {
+  label: string
+  value: string
+  unit: string
+  delta: string
+  positive: boolean
+}
+
+export interface ChartPoint {
+  label: string
+  realized: number
+  projected: number
+}
+
+export interface Climate {
+  ubicacion: string
+  temp: number
+  condicion: string
+  humedad: number
+  viento: number
+  pronostico: string
+}
+
+export interface MarketQuote {
+  producto: string
+  precio: string
+  unidad: string
+  delta: string
+}
+
+export interface MachineAlert {
+  titulo: string
+  subtitle: string
+  severity: Severity
+  confidence: number
+  progress: number
+  action: string
+}
+
+export interface LotSummary {
+  id: string
+  nombre: string
+  cultivo: CropType
+  hectareas: number
+  rinde: number
+  ndvi: number
+  humedad: number
+}
+
+export interface DashboardOverviewResponse {
+  generated_at: string
+  kpis: KPI[]
+  chart: ChartPoint[]
+  clima: Climate
+  pizarra_rosario: MarketQuote[]
+  machine_alert: MachineAlert
+  recent_lots: LotSummary[]
 }
 
 export interface SelectedLot {

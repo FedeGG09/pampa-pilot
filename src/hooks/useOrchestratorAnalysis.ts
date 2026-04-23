@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useCallback, useState } from 'react'
 import { analyzeOrchestrator, isApiError } from '@/lib/api'
 import type { OrchestratorAnalyzeRequest, OrchestratorAnalyzeResponse } from '@/types/api'
 
@@ -7,9 +7,10 @@ export function useOrchestratorAnalysis() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  async function run(input: OrchestratorAnalyzeRequest) {
+  const run = useCallback(async (input: OrchestratorAnalyzeRequest) => {
     setLoading(true)
     setError(null)
+
     try {
       const result = await analyzeOrchestrator(input)
       setData(result)
@@ -21,7 +22,7 @@ export function useOrchestratorAnalysis() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
 
   return { data, loading, error, run, setData }
 }
