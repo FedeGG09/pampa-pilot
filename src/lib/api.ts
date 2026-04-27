@@ -152,3 +152,16 @@ export async function analyzeOrchestrator(
     body: JSON.stringify(input),
   })
 }
+
+export type AgronomistChatResponse = {
+  reply: string
+}
+
+export async function sendAgronomistChat(
+  message: string,
+): Promise<AgronomistChatResponse> {
+  return request<AgronomistChatResponse>('/agronomist/chat', {
+    method: 'POST',
+    body: JSON.stringify({ message }),
+  })
+}

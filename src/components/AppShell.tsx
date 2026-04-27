@@ -12,6 +12,7 @@ import { useState } from 'react'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 import { getApiBaseUrl } from '@/lib/api'
+import ChatFloatingButton from '@/components/ChatFloatingButton'
 
 const navigation = [
   { to: '/dashboard', label: 'Dashboard', icon: ChartNoAxesCombined },
@@ -25,7 +26,7 @@ export function AppShell() {
   const [collapsed, setCollapsed] = useState(false)
 
   return (
-    <div className="min-h-screen bg-[var(--background)] text-stone-900">
+    <div className="min-h-screen overflow-hidden bg-[var(--background)] text-stone-900">
       <div className="flex min-h-screen">
         <aside
           className={cn(
@@ -113,12 +114,13 @@ export function AppShell() {
             </div>
           </header>
 
-          <main className="flex-1 p-6">
+          <main className="flex-1 p-6 pb-28 md:pb-6">
             <Outlet />
           </main>
+
+          <ChatFloatingButton />
         </div>
       </div>
     </div>
   )
 }
-// fix build
