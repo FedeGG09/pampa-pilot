@@ -26,35 +26,42 @@ import type {
 
 const STORAGE_KEY = 'agrocopilot-agent-chat-v2';
 
-const AGENTS: Agent[] = [
-  {
+const AGENT_BY_ID: Record<AgentId, Agent> = {
+  agronomist: {
     id: 'agronomist',
     name: 'Agrónomo',
     description: 'Diagnóstico, manejo, suelo, cultivos y recomendaciones técnicas.',
     image: agronomistImg,
     accentClass: 'bg-emerald-50 text-emerald-700 ring-emerald-200',
   },
-  {
+  finance: {
     id: 'finance',
     name: 'Finanzas',
     description: 'Costos, margen, impacto económico, escenarios y simulaciones.',
     image: financeImg,
     accentClass: 'bg-sky-50 text-sky-700 ring-sky-200',
   },
-  {
+  machinery: {
     id: 'machinery',
     name: 'Maquinaria',
     description: 'Capacidad operativa, mantenimiento, telemetría y eficiencia.',
     image: machineryImg,
     accentClass: 'bg-amber-50 text-amber-800 ring-amber-200',
   },
-  {
+  people_legal: {
     id: 'people_legal',
     name: 'Gente y Legal',
     description: 'Contratos, relaciones laborales, cumplimiento y documentación.',
     image: peopleLegalImg,
     accentClass: 'bg-violet-50 text-violet-700 ring-violet-200',
   },
+};
+
+const AGENTS: Agent[] = [
+  AGENT_BY_ID.agronomist,
+  AGENT_BY_ID.finance,
+  AGENT_BY_ID.machinery,
+  AGENT_BY_ID.people_legal,
 ];
 
 const WELCOME_MESSAGE: Record<AgentId, string> = {
@@ -156,10 +163,7 @@ function useAgentChat() {
     );
   }, [selectedAgentId, messagesByAgent]);
 
-  const selectedAgent = useMemo(() => {
-    return AGENTS.find(agent => agent.id === selectedAgentId) ?? AGENTS[0]!;
-  }, [selectedAgentId]);
-
+  const selectedAgent: Agent = AGENT_BY_ID[selectedAgentId];
   const messages = messagesByAgent[selectedAgentId] ?? [];
 
   const send = async () => {
@@ -167,8 +171,7 @@ function useAgentChat() {
     if (!text || isSending) return;
 
     const agentId = selectedAgentId;
-    const currentAgent =
-      AGENTS.find(agent => agent.id === agentId) ?? AGENTS[0]!;
+    const currentAgent: Agent = AGENT_BY_ID[agentId];
     const currentMessages = messagesByAgent[agentId] ?? [];
 
     const userMessage = createMessage(agentId, 'user', text);
@@ -222,7 +225,7 @@ function useAgentChat() {
       }));
     } catch (err) {
       const message =
-        err instanceof Error ? err.message : 'No se pudo conectar con el backend';
+        err instanceof Error ? err.message : 'No se pudo conectar con el backend.';
 
       setError(message);
 

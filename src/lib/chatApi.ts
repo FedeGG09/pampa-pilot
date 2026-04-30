@@ -49,9 +49,14 @@ function buildUrl(path: string): string {
   return `${BASE_URL}${normalizedPath}`;
 }
 
+type SafeRequestInit = Omit<RequestInit, 'body' | 'headers'> & {
+  headers?: HeadersInit;
+  body?: BodyInit | null;
+};
+
 async function request<TResponse>(
   path: string,
-  init: RequestInit = {},
+  init: SafeRequestInit = {},
 ): Promise<TResponse> {
   const controller = new AbortController();
   const timeout = globalThis.setTimeout(() => controller.abort(), 45_000);
@@ -59,7 +64,7 @@ async function request<TResponse>(
   try {
     const { headers, body, ...rest } = init;
 
-    const requestInit: RequestInit = {
+    const requestInit: RequestInit & { body?: BodyInit | null } = {
       ...rest,
       headers: {
         Accept: 'application/json',
