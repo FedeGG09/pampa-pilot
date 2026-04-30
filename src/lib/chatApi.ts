@@ -62,8 +62,8 @@ async function request<TResponse>(
     const requestInit: RequestInit = {
       ...rest,
       headers: {
-        'Content-Type': 'application/json',
         Accept: 'application/json',
+        ...(body !== undefined ? { 'Content-Type': 'application/json' } : {}),
         ...(headers ?? {}),
       },
       signal: controller.signal,
@@ -199,6 +199,7 @@ export async function searchConversations(
   }
 
   const path = `${CHAT_SEARCH_ENDPOINT}${params.toString() ? `?${params.toString()}` : ''}`;
+
   const payload = await request<SearchConversationsResponse | ConversationSearchItem[] | unknown>(
     path,
     { method: 'GET' },
