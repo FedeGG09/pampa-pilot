@@ -59,7 +59,7 @@ async function request<TResponse>(
   try {
     const { headers, body, ...rest } = init;
 
-    const response = await fetch(buildUrl(path), {
+    const requestInit: RequestInit = {
       ...rest,
       headers: {
         'Content-Type': 'application/json',
@@ -67,8 +67,13 @@ async function request<TResponse>(
         ...(headers ?? {}),
       },
       signal: controller.signal,
-      body,
-    });
+    };
+
+    if (body !== undefined) {
+      requestInit.body = body;
+    }
+
+    const response = await fetch(buildUrl(path), requestInit);
 
     const contentType = response.headers.get('content-type') ?? '';
     const payload = contentType.includes('application/json')

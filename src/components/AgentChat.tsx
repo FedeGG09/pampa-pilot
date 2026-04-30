@@ -156,10 +156,9 @@ function useAgentChat() {
     );
   }, [selectedAgentId, messagesByAgent]);
 
-  const selectedAgent = useMemo(
-    () => AGENTS.find(agent => agent.id === selectedAgentId) ?? AGENTS[0],
-    [selectedAgentId],
-  );
+  const selectedAgent = useMemo(() => {
+    return AGENTS.find(agent => agent.id === selectedAgentId) ?? AGENTS[0]!;
+  }, [selectedAgentId]);
 
   const messages = messagesByAgent[selectedAgentId] ?? [];
 
@@ -168,7 +167,8 @@ function useAgentChat() {
     if (!text || isSending) return;
 
     const agentId = selectedAgentId;
-    const currentAgent = AGENTS.find(agent => agent.id === agentId) ?? AGENTS[0];
+    const currentAgent =
+      AGENTS.find(agent => agent.id === agentId) ?? AGENTS[0]!;
     const currentMessages = messagesByAgent[agentId] ?? [];
 
     const userMessage = createMessage(agentId, 'user', text);
@@ -222,7 +222,7 @@ function useAgentChat() {
       }));
     } catch (err) {
       const message =
-        err instanceof Error ? err.message : 'No se pudo conectar con el backend.';
+        err instanceof Error ? err.message : 'No se pudo conectar con el backend';
 
       setError(message);
 
@@ -303,7 +303,9 @@ function MessageBubble({ message }: { message: Message }) {
         ].join(' ')}
       >
         <div className="whitespace-pre-wrap break-words">{message.content}</div>
-        <div className={`mt-2 text-[11px] ${isUser ? 'text-slate-300' : 'text-slate-400'}`}>
+        <div
+          className={`mt-2 text-[11px] ${isUser ? 'text-slate-300' : 'text-slate-400'}`}
+        >
           {new Date(message.createdAt).toLocaleTimeString('es-AR', {
             hour: '2-digit',
             minute: '2-digit',
@@ -331,7 +333,9 @@ function SearchResultCard({ item }: { item: ConversationSearchItem }) {
           ) : null}
           <div className="mt-2 text-[11px] text-slate-500">
             {item.agentId ? `agente: ${item.agentId}` : 'sin agente'}{' '}
-            {item.updatedAt ? `· ${new Date(item.updatedAt).toLocaleString('es-AR')}` : ''}
+            {item.updatedAt
+              ? `· ${new Date(item.updatedAt).toLocaleString('es-AR')}`
+              : ''}
           </div>
         </div>
       </div>
