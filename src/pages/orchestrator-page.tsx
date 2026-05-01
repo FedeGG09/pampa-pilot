@@ -56,7 +56,9 @@ function openFloatingChat(detail?: OpenChatEventDetail) {
 
   if (detail) {
     window.dispatchEvent(
-      new CustomEvent<OpenChatEventDetail>('agrocopilot:open-chat', { detail }),
+      new CustomEvent<OpenChatEventDetail>('agrocopilot:open-chat', {
+        detail,
+      }),
     );
     return;
   }
@@ -118,7 +120,8 @@ export function OrchestratorPage() {
                 </div>
 
                 <p className="mt-4 text-sm text-stone-600">
-                  {lot.crop.toUpperCase()} · NDVI {lot.ndvi.toFixed(2)} · {ndviLabel(lot.ndvi)}
+                  {lot.crop.toUpperCase()} · NDVI {lot.ndvi.toFixed(2)} ·{' '}
+                  {ndviLabel(lot.ndvi)}
                 </p>
               </div>
             ) : (
@@ -198,7 +201,10 @@ export function OrchestratorPage() {
 
                 <div className="grid gap-3 md:grid-cols-2">
                   <Stat label="Confianza" value={formatPercent(data.confidence, 0)} />
-                  <Stat label="Flujo sugerido" value={data.suggested_flow.toUpperCase()} />
+                  <Stat
+                    label="Flujo sugerido"
+                    value={data.suggested_flow.toUpperCase()}
+                  />
                 </div>
               </div>
             )}

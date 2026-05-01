@@ -227,7 +227,10 @@ function normalizeConversation(
 }
 
 function firstConversationId(conversations: ConversationThread[], agentId: AgentId) {
-  return conversations[0]?.id ?? createConversation(agentId, 1).id;
+  if (conversations.length > 0) {
+    return conversations[0]!.id;
+  }
+  return createConversation(agentId, 1).id;
 }
 
 function createInitialChatStore(): ChatStore {
@@ -241,12 +244,10 @@ function createInitialChatStore(): ChatStore {
   return {
     selectedAgentId: 'agronomist',
     selectedConversationIdByAgent: {
-      agronomist: conversationsByAgent.agronomist[0]?.id ?? createConversation('agronomist', 1).id,
-      finance: conversationsByAgent.finance[0]?.id ?? createConversation('finance', 1).id,
-      machinery: conversationsByAgent.machinery[0]?.id ?? createConversation('machinery', 1).id,
-      people_legal:
-        conversationsByAgent.people_legal[0]?.id ??
-        createConversation('people_legal', 1).id,
+      agronomist: conversationsByAgent.agronomist[0]!.id,
+      finance: conversationsByAgent.finance[0]!.id,
+      machinery: conversationsByAgent.machinery[0]!.id,
+      people_legal: conversationsByAgent.people_legal[0]!.id,
     },
     conversationsByAgent,
     draftsByAgent: {
@@ -264,31 +265,36 @@ function normalizeStore(candidate: Partial<ChatStore> | null | undefined): ChatS
 
   const sourceConversations = candidate.conversationsByAgent ?? base.conversationsByAgent;
 
+  const agronomistSource = sourceConversations.agronomist ?? [];
+  const financeSource = sourceConversations.finance ?? [];
+  const machinerySource = sourceConversations.machinery ?? [];
+  const legalSource = sourceConversations.people_legal ?? [];
+
   const conversationsByAgent: ChatStore['conversationsByAgent'] = {
     agronomist: sortConversations(
-      (sourceConversations.agronomist ?? []).length > 0
-        ? (sourceConversations.agronomist ?? []).map((thread, index) =>
+      agronomistSource.length > 0
+        ? agronomistSource.map((thread, index) =>
             normalizeConversation(thread, 'agronomist', index + 1),
           )
         : [createConversation('agronomist', 1)],
     ),
     finance: sortConversations(
-      (sourceConversations.finance ?? []).length > 0
-        ? (sourceConversations.finance ?? []).map((thread, index) =>
+      financeSource.length > 0
+        ? financeSource.map((thread, index) =>
             normalizeConversation(thread, 'finance', index + 1),
           )
         : [createConversation('finance', 1)],
     ),
     machinery: sortConversations(
-      (sourceConversations.machinery ?? []).length > 0
-        ? (sourceConversations.machinery ?? []).map((thread, index) =>
+      machinerySource.length > 0
+        ? machinerySource.map((thread, index) =>
             normalizeConversation(thread, 'machinery', index + 1),
           )
         : [createConversation('machinery', 1)],
     ),
     people_legal: sortConversations(
-      (sourceConversations.people_legal ?? []).length > 0
-        ? (sourceConversations.people_legal ?? []).map((thread, index) =>
+      legalSource.length > 0
+        ? legalSource.map((thread, index) =>
             normalizeConversation(thread, 'people_legal', index + 1),
           )
         : [createConversation('people_legal', 1)],
