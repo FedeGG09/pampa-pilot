@@ -15,6 +15,7 @@ export interface Message {
   role: ChatRole;
   content: string;
   createdAt: string;
+  conversationId?: string;
   pending?: boolean;
   error?: boolean;
 }
@@ -36,6 +37,22 @@ export interface ApiResponse {
   [key: string]: unknown;
 }
 
+export interface ConversationThread {
+  id: string;
+  agentId: AgentId;
+  title: string;
+  createdAt: string;
+  updatedAt: string;
+  messages: Message[];
+}
+
+export interface ChatStore {
+  selectedAgentId: AgentId;
+  selectedConversationIdByAgent: Record<AgentId, string>;
+  conversationsByAgent: Record<AgentId, ConversationThread[]>;
+  draftsByAgent: Record<AgentId, string>;
+}
+
 export interface ConversationSearchItem {
   id: string;
   title?: string;
@@ -51,4 +68,9 @@ export interface SearchConversationsResponse {
   items?: ConversationSearchItem[];
   conversations?: ConversationSearchItem[];
   [key: string]: unknown;
+}
+
+export interface OpenChatEventDetail {
+  agentId?: AgentId;
+  conversationId?: string;
 }

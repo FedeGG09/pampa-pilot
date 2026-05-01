@@ -1,4 +1,4 @@
-import { Link, Outlet } from '@tanstack/react-router'
+import { Link, Outlet } from '@tanstack/react-router';
 import {
   Menu,
   Bell,
@@ -7,12 +7,12 @@ import {
   Calculator,
   Orbit,
   ChartNoAxesCombined,
-} from 'lucide-react'
-import { useState } from 'react'
-import { Badge } from '@/components/ui/badge'
-import { cn } from '@/lib/utils'
-import { getApiBaseUrl } from '@/lib/api'
-import ChatFloatingButton from '@/components/ChatFloatingButton'
+} from 'lucide-react';
+import { useState } from 'react';
+import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
+import { getApiBaseUrl } from '@/lib/api';
+import ChatFloatingButton from '@/components/ChatFloatingButton';
 
 const navigation = [
   { to: '/dashboard', label: 'Dashboard', icon: ChartNoAxesCombined },
@@ -20,10 +20,10 @@ const navigation = [
   { to: '/dtc', label: 'Asesor Técnico', icon: Wrench },
   { to: '/finanzas', label: 'Simulador Financiero', icon: Calculator },
   { to: '/orquestador', label: 'Orquestador AI', icon: Orbit },
-] as const
+] as const;
 
 export function AppShell() {
-  const [collapsed, setCollapsed] = useState(false)
+  const [collapsed, setCollapsed] = useState(false);
 
   return (
     <div className="min-h-screen overflow-hidden bg-[var(--background)] text-stone-900">
@@ -122,5 +122,5 @@ export function AppShell() {
         </div>
       </div>
     </div>
-  )
+  );
 }

@@ -1,160 +1,60 @@
-import { useState, useRef, useEffect } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
-import { Send, X, MessageCircle } from 'lucide-react'
-import { sendAgronomistChat } from '@/lib/api'
-import { cn } from '@/lib/utils'
+import { useEffect, useState } from 'react';
+import { motion } from 'framer-motion';
+import { MessageCircle, X } from 'lucide-react';
+import ChatWindow from '@/components/ChatWindow';
+import type { AgentId, OpenChatEventDetail } from '@/types/chat';
 
-type Message = {
-  role: 'user' | 'assistant'
-  content: string
-}
+const OPEN_EVENT = 'agrocopilot:open-chat';
+const CLOSE_EVENT = 'agrocopilot:close-chat';
 
 export default function ChatFloatingButton() {
-  const [open, setOpen] = useState(false)
-  const [messages, setMessages] = useState<Message[]>([])
-  const [input, setInput] = useState('')
-  const [loading, setLoading] = useState(false)
-
-  const messagesEndRef = useRef<HTMLDivElement | null>(null)
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }
+  const [open, setOpen] = useState(false);
+  const [initialAgentId, setInitialAgentId] = useState<AgentId>('agronomist');
+  const [initialConversationId, setInitialConversationId] = useState<string | undefined>(undefined);
 
   useEffect(() => {
-    scrollToBottom()
-  }, [messages, loading])
-
-  const handleSend = async () => {
-    if (!input.trim() || loading) return
-
-    const userMessage: Message = {
-      role: 'user',
-      content: input,
-    }
-
-    setMessages((prev) => [...prev, userMessage])
-    setInput('')
-    setLoading(true)
-
-    try {
-      const res = await sendAgronomistChat(userMessage.content)
-
-      const botMessage: Message = {
-        role: 'assistant',
-        content: res.reply ?? 'Sin respuesta del agrónomo',
+    const handleOpen = (event: Event) => {
+      const customEvent = event as CustomEvent<OpenChatEventDetail>;
+      if (customEvent.detail?.agentId) {
+        setInitialAgentId(customEvent.detail.agentId);
       }
+      setInitialConversationId(customEvent.detail?.conversationId);
+      setOpen(true);
+    };
 
-      setMessages((prev) => [...prev, botMessage])
-    } catch (error) {
-      setMessages((prev) => [
-        ...prev,
-        {
-          role: 'assistant',
-          content: 'Error al conectar con el agrónomo.',
-        },
-      ])
-    } finally {
-      setLoading(false)
-    }
-  }
+    const handleClose = () => setOpen(false);
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') handleSend()
-  }
+    window.addEventListener(OPEN_EVENT, handleOpen as EventListener);
+    window.addEventListener(CLOSE_EVENT, handleClose);
+
+    return () => {
+      window.removeEventListener(OPEN_EVENT, handleOpen as EventListener);
+      window.removeEventListener(CLOSE_EVENT, handleClose);
+    };
+  }, []);
 
   return (
     <>
-      {/* BOTÓN FLOTANTE */}
-      <button
-        onClick={() => setOpen(true)}
-        className="fixed bottom-5 right-5 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-[var(--primary)] text-white shadow-lg transition hover:scale-105"
+      <motion.button
+        type="button"
+        onClick={() => setOpen((value) => !value)}
+        className="fixed bottom-6 right-6 z-[60] inline-flex items-center gap-3 rounded-full border border-[var(--primary)] bg-[var(--primary)] px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-emerald-950/15 transition hover:brightness-110 active:brightness-95"
+        initial={{ y: 10, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        whileTap={{ scale: 0.98 }}
       >
-        <MessageCircle className="h-6 w-6" />
-      </button>
+        {open ? <X className="h-5 w-5" /> : <MessageCircle className="h-5 w-5" />}
+        <span className="hidden sm:inline">
+          {open ? 'Cerrar chat' : 'AgroCopilot AI'}
+        </span>
+      </motion.button>
 
-      {/* CHAT WINDOW */}
-      <AnimatePresence>
-        {open && (
-          <motion.div
-            initial={{ opacity: 0, y: 80, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 80, scale: 0.95 }}
-            transition={{ duration: 0.2 }}
-            className="fixed bottom-24 right-5 z-50 flex h-[500px] w-[350px] flex-col overflow-hidden rounded-2xl border border-stone-200 bg-white/90 shadow-2xl backdrop-blur-xl md:w-[380px]"
-          >
-            {/* HEADER */}
-            <div className="flex items-center justify-between border-b border-stone-200 px-4 py-3">
-              <div>
-                <p className="text-sm font-semibold">Agronomist AI</p>
-                <p className="text-xs text-stone-500">
-                  Asistente técnico del campo
-                </p>
-              </div>
-
-              <button
-                onClick={() => setOpen(false)}
-                className="rounded-lg p-1 hover:bg-stone-100"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            </div>
-
-            {/* MENSAJES */}
-            <div className="flex-1 space-y-3 overflow-y-auto p-4">
-              {messages.length === 0 && (
-                <div className="text-sm text-stone-400">
-                  Preguntá sobre rindes, clima, suelo o decisiones agronómicas.
-                </div>
-              )}
-
-              {messages.map((msg, i) => (
-                <div
-                  key={i}
-                  className={cn(
-                    'max-w-[80%] rounded-2xl px-3 py-2 text-sm',
-                    msg.role === 'user'
-                      ? 'ml-auto bg-[var(--primary)] text-white'
-                      : 'bg-stone-100 text-stone-800',
-                  )}
-                >
-                  {msg.content}
-                </div>
-              ))}
-
-              {/* LOADING */}
-              {loading && (
-                <div className="flex items-center gap-2 text-sm text-stone-500">
-                  <div className="h-2 w-2 animate-bounce rounded-full bg-stone-400" />
-                  <div className="h-2 w-2 animate-bounce rounded-full bg-stone-400 [animation-delay:0.2s]" />
-                  <div className="h-2 w-2 animate-bounce rounded-full bg-stone-400 [animation-delay:0.4s]" />
-                </div>
-              )}
-
-              <div ref={messagesEndRef} />
-            </div>
-
-            {/* INPUT */}
-            <div className="flex items-center gap-2 border-t border-stone-200 p-3">
-              <input
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={handleKeyDown}
-                placeholder="Escribí tu consulta..."
-                className="flex-1 rounded-xl border border-stone-200 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[var(--primary)]"
-              />
-
-              <button
-                onClick={handleSend}
-                disabled={loading}
-                className="rounded-xl bg-[var(--primary)] p-2 text-white transition hover:opacity-90 disabled:opacity-50"
-              >
-                <Send className="h-4 w-4" />
-              </button>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <ChatWindow
+        open={open}
+        onClose={() => setOpen(false)}
+        initialAgentId={initialAgentId}
+        initialConversationId={initialConversationId}
+      />
     </>
-  )
+  );
 }

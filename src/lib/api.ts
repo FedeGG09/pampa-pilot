@@ -6,7 +6,7 @@ import type {
   FinanceSimulationResponse,
   OrchestratorAnalyzeRequest,
   OrchestratorAnalyzeResponse,
-} from '@/types/api'
+} from '@/types/api';
 
 class ApiError extends Error {
   constructor(
@@ -14,81 +14,88 @@ class ApiError extends Error {
     public readonly status?: number,
     public readonly details?: unknown,
   ) {
-    super(message)
-    this.name = 'ApiError'
+    super(message);
+    this.name = 'ApiError';
   }
 }
 
 const BASE_URL = (
   import.meta.env.VITE_API_BASE_URL ?? 'https://fedegg09-pampa-pilot-api.hf.space'
-).replace(/\/+$/, '')
+).replace(/\/+$/, '');
+
+type SafeRequestInit = Omit<RequestInit, 'body' | 'headers'> & {
+  headers?: HeadersInit;
+  body?: BodyInit | null;
+};
 
 async function request<TResponse>(
   path: string,
-  init: RequestInit = {},
+  init: SafeRequestInit = {},
 ): Promise<TResponse> {
-  const controller = new AbortController()
-  const timeout = globalThis.setTimeout(() => controller.abort(), 45_000)
+  const controller = new AbortController();
+  const timeout = globalThis.setTimeout(() => controller.abort(), 45_000);
 
   try {
-    const { headers, body, ...rest } = init
+    const { headers, body, ...rest } = init;
+    const resolvedHeaders = new Headers(headers ?? {});
+
+    resolvedHeaders.set('Accept', 'application/json');
+    if (body !== undefined) {
+      resolvedHeaders.set('Content-Type', 'application/json');
+    }
 
     const requestInit: RequestInit = {
       ...rest,
-      headers: {
-        'Content-Type': 'application/json',
-        Accept: 'application/json',
-        ...(headers ?? {}),
-      },
+      headers: resolvedHeaders,
       signal: controller.signal,
-    }
+    };
 
     if (body !== undefined) {
-      requestInit.body = body
+      (requestInit as RequestInit & { body?: BodyInit | null }).body = body;
     }
 
-    const response = await fetch(`${BASE_URL}${path}`, requestInit)
+    const response = await fetch(`${BASE_URL}${path}`, requestInit);
 
-    const contentType = response.headers.get('content-type') ?? ''
+    const contentType = response.headers.get('content-type') ?? '';
     const payload = contentType.includes('application/json')
       ? await response.json().catch(() => null)
-      : await response.text().catch(() => null)
+      : await response.text().catch(() => null);
 
     if (!response.ok) {
       const message =
         typeof payload === 'object' && payload && 'detail' in payload
           ? String((payload as Record<string, unknown>).detail)
-          : `HTTP ${response.status}`
+          : `HTTP ${response.status}`;
 
-      throw new ApiError(message, response.status, payload)
+      throw new ApiError(message, response.status, payload);
     }
 
-    return payload as TResponse
+    return payload as TResponse;
   } catch (error) {
-    if (error instanceof ApiError) throw error
+    if (error instanceof ApiError) throw error;
 
     if (error instanceof DOMException && error.name === 'AbortError') {
-      throw new ApiError('La solicitud superó el tiempo de espera.', 408)
+      throw new ApiError('La solicitud superó el tiempo de espera.', 408);
     }
 
-    const message = error instanceof Error ? error.message : 'Error inesperado'
-    throw new ApiError(message, undefined, error)
+    const message = error instanceof Error ? error.message : 'Error inesperado';
+    throw new ApiError(message, undefined, error);
   } finally {
-    globalThis.clearTimeout(timeout)
+    globalThis.clearTimeout(timeout);
   }
 }
 
 export function getApiBaseUrl(): string {
-  return BASE_URL
+  return BASE_URL;
 }
 
 export function isApiError(error: unknown): error is ApiError {
-  return error instanceof ApiError
+  return error instanceof ApiError;
 }
 
 export const apiClient = {
   get<TResponse>(path: string, init?: RequestInit) {
-    return request<TResponse>(path, { ...init, method: 'GET' })
+    return request<TResponse>(path, { ...init, method: 'GET' });
   },
 
   post<TResponse, TBody extends Record<string, unknown> = Record<string, unknown>>(
@@ -100,7 +107,7 @@ export const apiClient = {
       ...init,
       method: 'POST',
       body: JSON.stringify(body),
-    })
+    });
   },
 
   put<TResponse, TBody extends Record<string, unknown> = Record<string, unknown>>(
@@ -112,18 +119,18 @@ export const apiClient = {
       ...init,
       method: 'PUT',
       body: JSON.stringify(body),
-    })
+    });
   },
 
   del<TResponse>(path: string, init?: RequestInit) {
-    return request<TResponse>(path, { ...init, method: 'DELETE' })
+    return request<TResponse>(path, { ...init, method: 'DELETE' });
   },
-}
+};
 
 export async function fetchDashboardOverview(): Promise<DashboardOverviewResponse> {
   return request<DashboardOverviewResponse>('/dashboard/overview', {
     method: 'GET',
-  })
+  });
 }
 
 export async function diagnoseDtc(
@@ -132,7 +139,7 @@ export async function diagnoseDtc(
   return request<DtcDiagnosisResponse>('/dtc/diagnose', {
     method: 'POST',
     body: JSON.stringify(input),
-  })
+  });
 }
 
 export async function simulateFinance(
@@ -141,7 +148,7 @@ export async function simulateFinance(
   return request<FinanceSimulationResponse>('/finance/simulate', {
     method: 'POST',
     body: JSON.stringify(input),
-  })
+  });
 }
 
 export async function analyzeOrchestrator(
@@ -150,12 +157,12 @@ export async function analyzeOrchestrator(
   return request<OrchestratorAnalyzeResponse>('/orchestrator/analyze', {
     method: 'POST',
     body: JSON.stringify(input),
-  })
+  });
 }
 
 export type AgronomistChatResponse = {
-  reply: string
-}
+  reply: string;
+};
 
 export async function sendAgronomistChat(
   message: string,
@@ -163,5 +170,5 @@ export async function sendAgronomistChat(
   return request<AgronomistChatResponse>('/agronomist/chat', {
     method: 'POST',
     body: JSON.stringify({ message }),
-  })
+  });
 }
