@@ -227,9 +227,8 @@ function normalizeConversation(
 }
 
 function firstConversationId(conversations: ConversationThread[], agentId: AgentId) {
-  if (conversations.length > 0) {
-    return conversations[0]!.id;
-  }
+  const first = conversations[0];
+  if (first) return first.id;
   return createConversation(agentId, 1).id;
 }
 
@@ -241,13 +240,18 @@ function createInitialChatStore(): ChatStore {
     people_legal: [createConversation('people_legal', 1)],
   } satisfies ChatStore['conversationsByAgent'];
 
+  const agronomistConversation = conversationsByAgent.agronomist[0];
+  const financeConversation = conversationsByAgent.finance[0];
+  const machineryConversation = conversationsByAgent.machinery[0];
+  const legalConversation = conversationsByAgent.people_legal[0];
+
   return {
     selectedAgentId: 'agronomist',
     selectedConversationIdByAgent: {
-      agronomist: conversationsByAgent.agronomist[0]!.id,
-      finance: conversationsByAgent.finance[0]!.id,
-      machinery: conversationsByAgent.machinery[0]!.id,
-      people_legal: conversationsByAgent.people_legal[0]!.id,
+      agronomist: agronomistConversation ? agronomistConversation.id : createConversation('agronomist', 1).id,
+      finance: financeConversation ? financeConversation.id : createConversation('finance', 1).id,
+      machinery: machineryConversation ? machineryConversation.id : createConversation('machinery', 1).id,
+      people_legal: legalConversation ? legalConversation.id : createConversation('people_legal', 1).id,
     },
     conversationsByAgent,
     draftsByAgent: {

@@ -14,8 +14,6 @@ import machineryImg from '@/assets/machinery.png';
 import peopleLegalImg from '@/assets/people_legal.png';
 import type { AgentId, OpenChatEventDetail } from '@/types/chat';
 
-const OPEN_EVENT = 'agrocopilot:open-chat';
-
 const AGENTS: Array<{
   id: AgentId;
   name: string;
@@ -57,13 +55,14 @@ function openFloatingChat(detail?: OpenChatEventDetail) {
   if (typeof window === 'undefined') return;
 
   if (detail && (detail.agentId || detail.conversationId)) {
+    const eventInit: CustomEventInit<OpenChatEventDetail> = { detail };
     window.dispatchEvent(
-      new CustomEvent<OpenChatEventDetail>(OPEN_EVENT, { detail }),
+      new CustomEvent<OpenChatEventDetail>('agrocopilot:open-chat', eventInit),
     );
     return;
   }
 
-  window.dispatchEvent(new Event(OPEN_EVENT));
+  window.dispatchEvent(new Event('agrocopilot:open-chat'));
 }
 
 export function OrchestratorPage() {
@@ -120,7 +119,8 @@ export function OrchestratorPage() {
                 </div>
 
                 <p className="mt-4 text-sm text-stone-600">
-                  {lot.crop.toUpperCase()} · NDVI {lot.ndvi.toFixed(2)} · {ndviLabel(lot.ndvi)}
+                  {lot.crop.toUpperCase()} · NDVI {lot.ndvi.toFixed(2)} ·{' '}
+                  {ndviLabel(lot.ndvi)}
                 </p>
               </div>
             ) : (
