@@ -95,18 +95,30 @@ function truncate(text: string, max = 42): string {
   return `${cleaned.slice(0, max - 1).trimEnd()}…`;
 }
 
-export function getAgentLabel(agentId: AgentId): string {
-  return AGENT_CONFIG[agentId].label;
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
 }
 
-function createWelcomeMessage(agentId: AgentId): Message {
+function resolveAgentConfig(agentId: AgentId) {
+  const config = AGENT_CONFIG[agentId];
+  if (!config) {
+    throw new ApiError(`Agent config not found for ${agentId}`);
+  }
+  return config;
+}
+
+export function getAgentLabel(agentId: AgentId): string {
+  return resolveAgentConfig(agentId).label;
+}
+
+function createWelcomeMessage(agentId: AgentId, conversationId = ''): Message {
   return {
     id: uid(),
     agentId,
     role: 'assistant',
-    content: AGENT_CONFIG[agentId].welcome,
+    content: resolveAgentConfig(agentId).welcome,
     createdAt: nowIso(),
-    conversationId: '',
+    conversationId,
   };
 }
 
@@ -131,14 +143,16 @@ export function createConversation(
   index = 1,
   title?: string,
 ): ConversationThread {
+  const id = uid();
   const createdAt = nowIso();
+
   return {
-    id: uid(),
+    id,
     agentId,
     title: title?.trim() || `Conversación ${index}`,
     createdAt,
     updatedAt: createdAt,
-    messages: [createWelcomeMessage(agentId)],
+    messages: [createWelcomeMessage(agentId, id)],
   };
 }
 
@@ -164,6 +178,58 @@ export function sortConversations(
   );
 }
 
+function normalizeMessage(
+  candidate: unknown,
+  agentId: AgentId,
+  conversationId: string,
+): Message {
+  const item = isRecord(candidate) ? candidate : {};
+  const role =
+    item.role === 'assistant' || item.role === 'system' ? item.role : 'user';
+
+  return {
+    id: typeof item.id === 'string' ? item.id : uid(),
+    agentId: (item.agentId as AgentId | undefined) ?? agentId,
+    role,
+    content: typeof item.content === 'string' ? item.content : '',
+    createdAt: typeof item.createdAt === 'string' ? item.createdAt : nowIso(),
+    conversationId,
+    pending: Boolean(item.pending),
+    error: Boolean(item.error),
+  };
+}
+
+function normalizeConversation(
+  candidate: unknown,
+  agentId: AgentId,
+  index: number,
+): ConversationThread {
+  const item = isRecord(candidate) ? candidate : {};
+  const id = typeof item.id === 'string' ? item.id : uid();
+  const rawTitle = typeof item.title === 'string' ? item.title.trim() : '';
+  const createdAt = typeof item.createdAt === 'string' ? item.createdAt : nowIso();
+  const updatedAt =
+    typeof item.updatedAt === 'string' ? item.updatedAt : createdAt;
+
+  const messages =
+    Array.isArray(item.messages) && item.messages.length > 0
+      ? item.messages.map((message) => normalizeMessage(message, agentId, id))
+      : [createWelcomeMessage(agentId, id)];
+
+  return {
+    id,
+    agentId: (item.agentId as AgentId | undefined) ?? agentId,
+    title: rawTitle || `Conversación ${index}`,
+    createdAt,
+    updatedAt,
+    messages,
+  };
+}
+
+function firstConversationId(conversations: ConversationThread[], agentId: AgentId) {
+  return conversations[0]?.id ?? createConversation(agentId, 1).id;
+}
+
 function createInitialChatStore(): ChatStore {
   const conversationsByAgent = {
     agronomist: [createConversation('agronomist', 1)],
@@ -175,10 +241,12 @@ function createInitialChatStore(): ChatStore {
   return {
     selectedAgentId: 'agronomist',
     selectedConversationIdByAgent: {
-      agronomist: conversationsByAgent.agronomist[0].id,
-      finance: conversationsByAgent.finance[0].id,
-      machinery: conversationsByAgent.machinery[0].id,
-      people_legal: conversationsByAgent.people_legal[0].id,
+      agronomist: conversationsByAgent.agronomist[0]?.id ?? createConversation('agronomist', 1).id,
+      finance: conversationsByAgent.finance[0]?.id ?? createConversation('finance', 1).id,
+      machinery: conversationsByAgent.machinery[0]?.id ?? createConversation('machinery', 1).id,
+      people_legal:
+        conversationsByAgent.people_legal[0]?.id ??
+        createConversation('people_legal', 1).id,
     },
     conversationsByAgent,
     draftsByAgent: {
@@ -194,52 +262,52 @@ function normalizeStore(candidate: Partial<ChatStore> | null | undefined): ChatS
   const base = createInitialChatStore();
   if (!candidate) return base;
 
+  const sourceConversations = candidate.conversationsByAgent ?? base.conversationsByAgent;
+
   const conversationsByAgent: ChatStore['conversationsByAgent'] = {
-    agronomist: base.conversationsByAgent.agronomist,
-    finance: base.conversationsByAgent.finance,
-    machinery: base.conversationsByAgent.machinery,
-    people_legal: base.conversationsByAgent.people_legal,
+    agronomist: sortConversations(
+      (sourceConversations.agronomist ?? []).length > 0
+        ? (sourceConversations.agronomist ?? []).map((thread, index) =>
+            normalizeConversation(thread, 'agronomist', index + 1),
+          )
+        : [createConversation('agronomist', 1)],
+    ),
+    finance: sortConversations(
+      (sourceConversations.finance ?? []).length > 0
+        ? (sourceConversations.finance ?? []).map((thread, index) =>
+            normalizeConversation(thread, 'finance', index + 1),
+          )
+        : [createConversation('finance', 1)],
+    ),
+    machinery: sortConversations(
+      (sourceConversations.machinery ?? []).length > 0
+        ? (sourceConversations.machinery ?? []).map((thread, index) =>
+            normalizeConversation(thread, 'machinery', index + 1),
+          )
+        : [createConversation('machinery', 1)],
+    ),
+    people_legal: sortConversations(
+      (sourceConversations.people_legal ?? []).length > 0
+        ? (sourceConversations.people_legal ?? []).map((thread, index) =>
+            normalizeConversation(thread, 'people_legal', index + 1),
+          )
+        : [createConversation('people_legal', 1)],
+    ),
   };
-
-  (Object.keys(base.conversationsByAgent) as AgentId[]).forEach((agentId) => {
-    const raw = candidate.conversationsByAgent?.[agentId];
-    const normalized =
-      Array.isArray(raw) && raw.length > 0
-        ? raw
-            .filter((item) => item && typeof item === 'object' && typeof item.id === 'string')
-            .map((item, index) => ({
-              id: item.id || uid(),
-              agentId: item.agentId ?? agentId,
-              title: item.title?.trim() || `Conversación ${index + 1}`,
-              createdAt: item.createdAt || nowIso(),
-              updatedAt: item.updatedAt || item.createdAt || nowIso(),
-              messages: Array.isArray(item.messages) && item.messages.length > 0
-                ? item.messages.map((message: Message) => ({
-                    ...message,
-                    conversationId: item.id,
-                    agentId: message.agentId ?? agentId,
-                    createdAt: message.createdAt || nowIso(),
-                  }))
-                : [createWelcomeMessage(agentId)],
-            }))
-        : [createConversation(agentId, 1)];
-
-    conversationsByAgent[agentId] = sortConversations(normalized);
-  });
 
   const selectedConversationIdByAgent: ChatStore['selectedConversationIdByAgent'] = {
     agronomist:
       candidate.selectedConversationIdByAgent?.agronomist ??
-      conversationsByAgent.agronomist[0].id,
+      firstConversationId(conversationsByAgent.agronomist, 'agronomist'),
     finance:
       candidate.selectedConversationIdByAgent?.finance ??
-      conversationsByAgent.finance[0].id,
+      firstConversationId(conversationsByAgent.finance, 'finance'),
     machinery:
       candidate.selectedConversationIdByAgent?.machinery ??
-      conversationsByAgent.machinery[0].id,
+      firstConversationId(conversationsByAgent.machinery, 'machinery'),
     people_legal:
       candidate.selectedConversationIdByAgent?.people_legal ??
-      conversationsByAgent.people_legal[0].id,
+      firstConversationId(conversationsByAgent.people_legal, 'people_legal'),
   };
 
   (Object.keys(conversationsByAgent) as AgentId[]).forEach((agentId) => {
@@ -247,7 +315,10 @@ function normalizeStore(candidate: Partial<ChatStore> | null | undefined): ChatS
       (thread) => thread.id === selectedConversationIdByAgent[agentId],
     );
     if (!exists) {
-      selectedConversationIdByAgent[agentId] = conversationsByAgent[agentId][0].id;
+      selectedConversationIdByAgent[agentId] = firstConversationId(
+        conversationsByAgent[agentId],
+        agentId,
+      );
     }
   });
 
@@ -287,26 +358,10 @@ export function selectAgent(store: ChatStore, agentId: AgentId): ChatStore {
   const normalized = normalizeStore(store);
   const conversations = normalized.conversationsByAgent[agentId];
 
-  if (!conversations.length) {
-    const newConversation = createConversation(agentId, 1);
-    return {
-      ...normalized,
-      selectedAgentId: agentId,
-      selectedConversationIdByAgent: {
-        ...normalized.selectedConversationIdByAgent,
-        [agentId]: newConversation.id,
-      },
-      conversationsByAgent: {
-        ...normalized.conversationsByAgent,
-        [agentId]: [newConversation],
-      },
-    };
-  }
-
   const activeId = normalized.selectedConversationIdByAgent[agentId];
   const nextActiveId = conversations.some((thread) => thread.id === activeId)
     ? activeId
-    : conversations[0].id;
+    : firstConversationId(conversations, agentId);
 
   return {
     ...normalized,
@@ -450,7 +505,7 @@ async function request<TResponse>(
 }
 
 function endpointForAgent(agentId: AgentId): string {
-  return AGENT_CONFIG[agentId].endpoint;
+  return resolveAgentConfig(agentId).endpoint;
 }
 
 export function normalizeAgentReply(payload: ApiResponse): string {
@@ -549,10 +604,9 @@ export async function searchConversations(
   }
 
   const path = buildUrlWithQuery(CHAT_SEARCH_ENDPOINT, params);
-  const payload = await request<SearchConversationsResponse | ConversationSearchItem[] | unknown>(
-    path,
-    { method: 'GET' },
-  );
+  const payload = await request<
+    SearchConversationsResponse | ConversationSearchItem[] | unknown
+  >(path, { method: 'GET' });
 
   return normalizeSearchResults(payload);
 }

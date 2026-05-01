@@ -10,7 +10,9 @@ const CLOSE_EVENT = 'agrocopilot:close-chat';
 export default function ChatFloatingButton() {
   const [open, setOpen] = useState(false);
   const [initialAgentId, setInitialAgentId] = useState<AgentId>('agronomist');
-  const [initialConversationId, setInitialConversationId] = useState<string | undefined>(undefined);
+  const [initialConversationId, setInitialConversationId] = useState<string | undefined>(
+    undefined,
+  );
 
   useEffect(() => {
     const handleOpen = (event: Event) => {
@@ -53,7 +55,7 @@ export default function ChatFloatingButton() {
         open={open}
         onClose={() => setOpen(false)}
         initialAgentId={initialAgentId}
-        initialConversationId={initialConversationId}
+        {...(initialConversationId ? { initialConversationId } : {})}
       />
     </>
   );

@@ -53,7 +53,15 @@ const AGENTS: Array<{
 
 function openFloatingChat(detail?: OpenChatEventDetail) {
   if (typeof window === 'undefined') return;
-  window.dispatchEvent(new CustomEvent<OpenChatEventDetail>('agrocopilot:open-chat', { detail }));
+
+  if (detail) {
+    window.dispatchEvent(
+      new CustomEvent<OpenChatEventDetail>('agrocopilot:open-chat', { detail }),
+    );
+    return;
+  }
+
+  window.dispatchEvent(new CustomEvent('agrocopilot:open-chat'));
 }
 
 export function OrchestratorPage() {
