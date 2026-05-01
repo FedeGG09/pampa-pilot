@@ -249,10 +249,14 @@ function createInitialChatStore(): ChatStore {
     people_legal: [createConversation('people_legal', 1)],
   } satisfies ChatStore['conversationsByAgent'];
 
-  const agronomistConversation = conversationsByAgent.agronomist[0];
-  const financeConversation = conversationsByAgent.finance[0];
-  const machineryConversation = conversationsByAgent.machinery[0];
-  const legalConversation = conversationsByAgent.people_legal[0];
+const getFirstConversation = (agentId: keyof typeof conversationsByAgent) => {
+  return (conversationsByAgent[agentId] ?? [])[0];
+};
+
+const agronomistConversation = getFirstConversation('agronomist');
+const financeConversation = getFirstConversation('finance');
+const machineryConversation = getFirstConversation('machinery');
+const legalConversation = getFirstConversation('people_legal');
 
   return {
     selectedAgentId: 'agronomist',

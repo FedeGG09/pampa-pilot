@@ -59,7 +59,7 @@ export default function ChatFloatingButton() {
           open={open}
           onClose={() => setOpen(false)}
           initialAgentId={initialAgentId}
-          initialConversationId={initialConversationId}
+          {...(initialConversationId !== undefined ? { initialConversationId } : {})}
         />
       ) : (
         <ChatWindow
@@ -71,3 +71,4 @@ export default function ChatFloatingButton() {
     </>
   );
 }
+
