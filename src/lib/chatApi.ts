@@ -75,6 +75,12 @@ const AGENT_CONFIG: Record<
 };
 
 const STORAGE_KEY = 'agrocopilot-floating-chat-store-v4';
+const AGENT_IDS: AgentId[] = [
+  'agronomist',
+  'finance',
+  'machinery',
+  'people_legal',
+];
 
 function buildUrl(path: string): string {
   const normalizedPath = path.startsWith('/') ? path : `/${path}`;
@@ -226,7 +232,10 @@ function normalizeConversation(
   };
 }
 
-function firstConversationId(conversations: ConversationThread[], agentId: AgentId) {
+function firstConversationId(
+  conversations: ConversationThread[],
+  agentId: AgentId,
+): string {
   const first = conversations[0];
   if (first) return first.id;
   return createConversation(agentId, 1).id;
@@ -248,10 +257,18 @@ function createInitialChatStore(): ChatStore {
   return {
     selectedAgentId: 'agronomist',
     selectedConversationIdByAgent: {
-      agronomist: agronomistConversation ? agronomistConversation.id : createConversation('agronomist', 1).id,
-      finance: financeConversation ? financeConversation.id : createConversation('finance', 1).id,
-      machinery: machineryConversation ? machineryConversation.id : createConversation('machinery', 1).id,
-      people_legal: legalConversation ? legalConversation.id : createConversation('people_legal', 1).id,
+      agronomist: agronomistConversation
+        ? agronomistConversation.id
+        : createConversation('agronomist', 1).id,
+      finance: financeConversation
+        ? financeConversation.id
+        : createConversation('finance', 1).id,
+      machinery: machineryConversation
+        ? machineryConversation.id
+        : createConversation('machinery', 1).id,
+      people_legal: legalConversation
+        ? legalConversation.id
+        : createConversation('people_legal', 1).id,
     },
     conversationsByAgent,
     draftsByAgent: {
@@ -263,11 +280,14 @@ function createInitialChatStore(): ChatStore {
   };
 }
 
-function normalizeStore(candidate: Partial<ChatStore> | null | undefined): ChatStore {
+function normalizeStore(
+  candidate: Partial<ChatStore> | null | undefined,
+): ChatStore {
   const base = createInitialChatStore();
   if (!candidate) return base;
 
-  const sourceConversations = candidate.conversationsByAgent ?? base.conversationsByAgent;
+  const sourceConversations =
+    candidate.conversationsByAgent ?? base.conversationsByAgent;
 
   const agronomistSource = sourceConversations.agronomist ?? [];
   const financeSource = sourceConversations.finance ?? [];
@@ -305,32 +325,32 @@ function normalizeStore(candidate: Partial<ChatStore> | null | undefined): ChatS
     ),
   };
 
-  const selectedConversationIdByAgent: ChatStore['selectedConversationIdByAgent'] = {
-    agronomist:
-      candidate.selectedConversationIdByAgent?.agronomist ??
-      firstConversationId(conversationsByAgent.agronomist, 'agronomist'),
-    finance:
-      candidate.selectedConversationIdByAgent?.finance ??
-      firstConversationId(conversationsByAgent.finance, 'finance'),
-    machinery:
-      candidate.selectedConversationIdByAgent?.machinery ??
-      firstConversationId(conversationsByAgent.machinery, 'machinery'),
-    people_legal:
-      candidate.selectedConversationIdByAgent?.people_legal ??
-      firstConversationId(conversationsByAgent.people_legal, 'people_legal'),
-  };
+  const selectedConversationIdByAgent: ChatStore['selectedConversationIdByAgent'] =
+    {
+      agronomist:
+        candidate.selectedConversationIdByAgent?.agronomist ??
+        firstConversationId(conversationsByAgent.agronomist, 'agronomist'),
+      finance:
+        candidate.selectedConversationIdByAgent?.finance ??
+        firstConversationId(conversationsByAgent.finance, 'finance'),
+      machinery:
+        candidate.selectedConversationIdByAgent?.machinery ??
+        firstConversationId(conversationsByAgent.machinery, 'machinery'),
+      people_legal:
+        candidate.selectedConversationIdByAgent?.people_legal ??
+        firstConversationId(conversationsByAgent.people_legal, 'people_legal'),
+    };
 
-  (Object.keys(conversationsByAgent) as AgentId[]).forEach((agentId) => {
-    const exists = conversationsByAgent[agentId].some(
+  for (const agentId of AGENT_IDS) {
+    const threads = conversationsByAgent[agentId] ?? [];
+    const exists = threads.some(
       (thread) => thread.id === selectedConversationIdByAgent[agentId],
     );
+
     if (!exists) {
-      selectedConversationIdByAgent[agentId] = firstConversationId(
-        conversationsByAgent[agentId],
-        agentId,
-      );
+      selectedConversationIdByAgent[agentId] = firstConversationId(threads, agentId);
     }
-  });
+  }
 
   return {
     selectedAgentId: candidate.selectedAgentId ?? 'agronomist',
@@ -367,8 +387,8 @@ export function saveChatStore(store: ChatStore): void {
 export function selectAgent(store: ChatStore, agentId: AgentId): ChatStore {
   const normalized = normalizeStore(store);
   const conversations = normalized.conversationsByAgent[agentId] ?? [];
-
   const activeId = normalized.selectedConversationIdByAgent[agentId];
+
   const nextActiveId = conversations.some((thread) => thread.id === activeId)
     ? activeId
     : firstConversationId(conversations, agentId);

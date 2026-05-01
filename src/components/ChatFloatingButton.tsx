@@ -39,7 +39,10 @@ export default function ChatFloatingButton() {
     <>
       <motion.button
         type="button"
-        onClick={() => setOpen((value) => !value)}
+        onClick={() => {
+          setInitialConversationId(undefined);
+          setOpen((value) => !value);
+        }}
         className="fixed bottom-6 right-6 z-[60] inline-flex items-center gap-3 rounded-full border border-[var(--primary)] bg-[var(--primary)] px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-emerald-950/15 transition hover:brightness-110 active:brightness-95"
         initial={{ y: 10, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
@@ -51,14 +54,20 @@ export default function ChatFloatingButton() {
         </span>
       </motion.button>
 
-      <ChatWindow
-        open={open}
-        onClose={() => setOpen(false)}
-        initialAgentId={initialAgentId}
-        {...(initialConversationId !== undefined
-          ? { initialConversationId }
-          : {})}
-      />
+      {initialConversationId !== undefined ? (
+        <ChatWindow
+          open={open}
+          onClose={() => setOpen(false)}
+          initialAgentId={initialAgentId}
+          initialConversationId={initialConversationId}
+        />
+      ) : (
+        <ChatWindow
+          open={open}
+          onClose={() => setOpen(false)}
+          initialAgentId={initialAgentId}
+        />
+      )}
     </>
   );
 }

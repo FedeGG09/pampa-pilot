@@ -54,15 +54,16 @@ const AGENTS: Array<{
 function openFloatingChat(detail?: OpenChatEventDetail) {
   if (typeof window === 'undefined') return;
 
-  if (detail && (detail.agentId || detail.conversationId)) {
-    const eventInit: CustomEventInit<OpenChatEventDetail> = { detail };
-    window.dispatchEvent(
-      new CustomEvent<OpenChatEventDetail>('agrocopilot:open-chat', eventInit),
-    );
+  if (!detail) {
+    window.dispatchEvent(new Event('agrocopilot:open-chat'));
     return;
   }
 
-  window.dispatchEvent(new Event('agrocopilot:open-chat'));
+  window.dispatchEvent(
+    new CustomEvent<OpenChatEventDetail>('agrocopilot:open-chat', {
+      detail,
+    }),
+  );
 }
 
 export function OrchestratorPage() {
