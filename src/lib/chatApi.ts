@@ -362,7 +362,7 @@ export function saveChatStore(store: ChatStore): void {
 
 export function selectAgent(store: ChatStore, agentId: AgentId): ChatStore {
   const normalized = normalizeStore(store);
-  const conversations = normalized.conversationsByAgent[agentId];
+  const conversations = normalized.conversationsByAgent[agentId] ?? [];
 
   const activeId = normalized.selectedConversationIdByAgent[agentId];
   const nextActiveId = conversations.some((thread) => thread.id === activeId)
@@ -385,7 +385,7 @@ export function selectConversation(
   conversationId: string,
 ): ChatStore {
   const normalized = normalizeStore(store);
-  const conversations = normalized.conversationsByAgent[agentId];
+  const conversations = normalized.conversationsByAgent[agentId] ?? [];
   const exists = conversations.some((thread) => thread.id === conversationId);
 
   if (!exists) return normalized;
