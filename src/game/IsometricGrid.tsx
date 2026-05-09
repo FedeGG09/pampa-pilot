@@ -113,14 +113,14 @@ export function IsometricGrid({ onSelect, selectedId }: { onSelect: (f: Finca) =
       const w = el.clientWidth - 24;
       const h = el.clientHeight - 24;
       const s = Math.min(1, Math.min(w / BOARD_W, h / BOARD_H));
-      setFitScale(Math.max(0.45, s));
+      setFitScale(Math.max(0.18, s));
     });
     ro.observe(el);
     return () => ro.disconnect();
   }, []);
 
   const totalScale = fitScale * zoom;
-  const boardHeight = Math.max(420, Math.min(680, BOARD_H * fitScale + 80));
+  const boardHeight = 600;
 
   const tryPlace = (f: Finca, ftype: FactoryType) => {
     const expected = factoryFor[f.type];
