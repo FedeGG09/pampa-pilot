@@ -1,7 +1,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { memo, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { useGame, type Finca, type FactoryType } from "./GameContext";
-import { ZoomIn, ZoomOut, Maximize2, Move } from "lucide-react";
+import { useGame, parcelCost, MAP_SIZE, MAP_CENTER, type Finca, type FactoryType, type Terrain } from "./GameContext";
+import { ZoomIn, ZoomOut, Maximize2, Move, Lock } from "lucide-react";
 import tileVid from "@/assets/tile-vid.png";
 import tileOlivo from "@/assets/tile-olivo.png";
 import tileNogal from "@/assets/tile-nogal.png";
