@@ -209,7 +209,7 @@ export function IsometricGrid({ onSelect, selectedId }: { onSelect: (f: Finca) =
   // Wheel zoom
   const onWheel = (e: React.WheelEvent) => {
     e.preventDefault();
-    setZoom((z) => Math.max(0.5, Math.min(2, z - e.deltaY * 0.001)));
+    setZoom((z) => Math.max(0.4, Math.min(4, z - e.deltaY * 0.0015)));
   };
 
   const fincaByXY = useMemo(() => {
