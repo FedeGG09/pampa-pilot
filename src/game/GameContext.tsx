@@ -618,11 +618,14 @@ function reducer(state: GameState, action: Action): GameState {
       const cost = 800_000;
       if (state.pesos < cost) return state;
       const used = new Set(state.fincas.map((f) => `${f.x},${f.y}`));
+      const occFa = new Set(state.factories.map((f) => `${f.x},${f.y}`));
       let pos: { x: number; y: number } | null = null;
-      for (let y = 0; y < 5 && !pos; y++) {
-        for (let x = 0; x < 5 && !pos; x++) {
-          if (!used.has(`${x},${y}`)) pos = { x, y };
-        }
+      for (const key of state.unlocked) {
+        if (used.has(key) || occFa.has(key) || state.terrain[key]) continue;
+        const [x, y] = key.split(",").map(Number);
+        if (x === MAP_CENTER && y === MAP_CENTER) continue; // almacén
+        pos = { x, y };
+        break;
       }
       if (!pos) return state;
       const name = FINCA_NAMES[state.fincas.length % FINCA_NAMES.length];
@@ -630,6 +633,23 @@ function reducer(state: GameState, action: Action): GameState {
         ...state,
         pesos: state.pesos - cost,
         fincas: [...state.fincas, { id: `f${Date.now()}`, x: pos.x, y: pos.y, type: action.cropType, name, stock: 0, growth: 10 }],
+      };
+    }
+
+    case "BUY_PARCEL": {
+      const key = `${action.x},${action.y}`;
+      if (state.unlocked.includes(key)) return state;
+      if (action.x < 0 || action.y < 0 || action.x >= MAP_SIZE || action.y >= MAP_SIZE) return state;
+      const cost = parcelCost(action.x, action.y);
+      if (state.pesos < cost) return state;
+      return {
+        ...state,
+        pesos: state.pesos - cost,
+        unlocked: [...state.unlocked, key],
+        eventos: [
+          { id: `parc${Date.now()}`, title: "Parcela adquirida", description: `Se compró la parcela (${action.x},${action.y}) por ${(cost / 1_000_000).toFixed(2)}M.`, kind: "good" as const, month: state.mes },
+          ...state.eventos,
+        ].slice(0, 20),
       };
     }
 
