@@ -1,7 +1,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { memo, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { useGame, type Finca, type FactoryType } from "./GameContext";
-import { ZoomIn, ZoomOut, Maximize2, Move } from "lucide-react";
+import { useGame, parcelCost, MAP_SIZE, MAP_CENTER, type Finca, type FactoryType, type Terrain } from "./GameContext";
+import { ZoomIn, ZoomOut, Maximize2, Move, Lock } from "lucide-react";
 import tileVid from "@/assets/tile-vid.png";
 import tileOlivo from "@/assets/tile-olivo.png";
 import tileNogal from "@/assets/tile-nogal.png";
@@ -35,12 +35,23 @@ function rotPct(stock: number, capacidad: number) {
   return Math.min(1, (stock - capacidad) / Math.max(capacidad, 1));
 }
 
-const TILE_W = 168;
-const TILE_H = 96;
-const GRID = 5;
+const TILE_W = 96;
+const TILE_H = 56;
+const GRID = MAP_SIZE; // 20
 const BOARD_W = GRID * TILE_W + 200;
 const BOARD_H = GRID * TILE_H + 280;
-const WAREHOUSE_GRID = { x: -1, y: 2 };
+const WAREHOUSE_GRID = { x: MAP_CENTER, y: MAP_CENTER };
+
+const TERRAIN_EMOJI: Record<Terrain, string> = {
+  mountain: "⛰️",
+  river: "🌊",
+  rocks: "🪨",
+};
+const TERRAIN_LABEL: Record<Terrain, string> = {
+  mountain: "Cerro (no construible)",
+  river: "Arroyo seco (requiere puente)",
+  rocks: "Pedregal (requiere limpieza)",
+};
 
 function isoPos(x: number, y: number) {
   return {
@@ -50,20 +61,22 @@ function isoPos(x: number, y: number) {
 }
 const WAREHOUSE = isoPos(WAREHOUSE_GRID.x, WAREHOUSE_GRID.y);
 
-function buildRoadSet(fincas: Finca[]): Set<string> {
+function buildRoadSet(fincas: Finca[], blocked: Record<string, Terrain>): Set<string> {
   const roads = new Set<string>();
   const wx = WAREHOUSE_GRID.x;
   const wy = WAREHOUSE_GRID.y;
   for (const f of fincas) {
-    // horizontal segment along y=wy
     const [x0, x1] = wx < f.x ? [wx + 1, f.x] : [f.x + 1, wx];
     for (let x = x0; x <= x1; x++) {
-      if (!(x === f.x && wy === f.y)) roads.add(`${x},${wy}`);
+      if (x === f.x && wy === f.y) continue;
+      if (blocked[`${x},${wy}`]) continue;
+      roads.add(`${x},${wy}`);
     }
-    // vertical from wy to f.y at column f.x
     const [y0, y1] = wy < f.y ? [wy + 1, f.y] : [f.y + 1, wy];
     for (let y = y0; y <= y1; y++) {
-      if (!(f.x === f.x && y === f.y)) roads.add(`${f.x},${y}`);
+      if (f.x === f.x && y === f.y) continue;
+      if (blocked[`${f.x},${y}`]) continue;
+      roads.add(`${f.x},${y}`);
     }
     roads.delete(`${f.x},${f.y}`);
   }
@@ -100,14 +113,14 @@ export function IsometricGrid({ onSelect, selectedId }: { onSelect: (f: Finca) =
       const w = el.clientWidth - 24;
       const h = el.clientHeight - 24;
       const s = Math.min(1, Math.min(w / BOARD_W, h / BOARD_H));
-      setFitScale(Math.max(0.45, s));
+      setFitScale(Math.max(0.18, s));
     });
     ro.observe(el);
     return () => ro.disconnect();
   }, []);
 
   const totalScale = fitScale * zoom;
-  const boardHeight = Math.max(420, Math.min(680, BOARD_H * fitScale + 80));
+  const boardHeight = 600;
 
   const tryPlace = (f: Finca, ftype: FactoryType) => {
     const expected = factoryFor[f.type];
@@ -196,7 +209,7 @@ export function IsometricGrid({ onSelect, selectedId }: { onSelect: (f: Finca) =
   // Wheel zoom
   const onWheel = (e: React.WheelEvent) => {
     e.preventDefault();
-    setZoom((z) => Math.max(0.5, Math.min(2, z - e.deltaY * 0.001)));
+    setZoom((z) => Math.max(0.4, Math.min(4, z - e.deltaY * 0.0015)));
   };
 
   const fincaByXY = useMemo(() => {
@@ -210,7 +223,8 @@ export function IsometricGrid({ onSelect, selectedId }: { onSelect: (f: Finca) =
     return m;
   }, [state.factories]);
 
-  const roads = useMemo(() => buildRoadSet(state.fincas), [state.fincas]);
+  const unlockedSet = useMemo(() => new Set(state.unlocked), [state.unlocked]);
+  const roads = useMemo(() => buildRoadSet(state.fincas, state.terrain), [state.fincas, state.terrain]);
 
   // Vehículos: tractores (1 por finca activa, 2 si mecanización)
   const tractorsPerFinca = state.tech.mecanizacion ? 2 : 1;
@@ -292,15 +306,79 @@ export function IsometricGrid({ onSelect, selectedId }: { onSelect: (f: Finca) =
           {Array.from({ length: GRID * GRID }).map((_, i) => {
             const x = i % GRID;
             const y = Math.floor(i / GRID);
-            const f = fincaByXY.get(`${x},${y}`);
-            const fa = factoryByXY.get(`${x},${y}`);
+            const key = `${x},${y}`;
+            if (x === WAREHOUSE_GRID.x && y === WAREHOUSE_GRID.y) return null;
+            const terrain = state.terrain[key];
+            const locked = !unlockedSet.has(key);
+            const pos = isoPos(x, y);
+            const z = (x + y) * 10;
+
+            // Parcela bloqueada (clickeable para comprar)
+            if (locked) {
+              const cost = parcelCost(x, y);
+              const canBuy = state.pesos >= cost;
+              return (
+                <div
+                  key={i}
+                  onClick={(e) => { e.stopPropagation(); if (canBuy) dispatch({ type: "BUY_PARCEL", x, y }); }}
+                  className="absolute cursor-pointer group"
+                  style={{ left: pos.left - TILE_W / 2, top: pos.top, width: TILE_W, height: TILE_H * 1.2, zIndex: z }}
+                  title={`Parcela bloqueada · $${(cost / 1_000_000).toFixed(2)}M`}
+                >
+                  <div
+                    className="absolute"
+                    style={{
+                      left: TILE_W * 0.05, top: TILE_H * 0.45,
+                      width: TILE_W * 0.9, height: TILE_H * 0.9,
+                      transform: "rotateX(60deg) rotateZ(45deg)",
+                      background: terrain
+                        ? "oklch(0.18 0.02 240 / 0.5)"
+                        : "repeating-linear-gradient(45deg, oklch(0.25 0.02 240 / 0.5) 0 8px, oklch(0.18 0.02 240 / 0.4) 8px 16px)",
+                      border: `1px dashed ${canBuy ? "oklch(0.78 0.17 70 / 0.5)" : "oklch(0.5 0.02 240 / 0.4)"}`,
+                      borderRadius: 4,
+                    }}
+                  />
+                  {terrain ? (
+                    <div className="pointer-events-none absolute select-none text-2xl" style={{ left: TILE_W * 0.32, top: TILE_H * 0.35, opacity: 0.85, filter: "drop-shadow(0 4px 4px rgba(0,0,0,0.5))" }}>
+                      {TERRAIN_EMOJI[terrain]}
+                    </div>
+                  ) : (
+                    <div className="pointer-events-none absolute opacity-0 group-hover:opacity-100 transition" style={{ left: TILE_W * 0.28, top: TILE_H * 0.4 }}>
+                      <Lock size={18} className={canBuy ? "text-[var(--amber)]" : "text-muted-foreground"} />
+                    </div>
+                  )}
+                  <div className="pointer-events-none absolute left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition" style={{ top: -2, zIndex: 700 }}>
+                    <span className={`whitespace-nowrap rounded-md px-1.5 py-0.5 text-[9px] font-bold backdrop-blur ${canBuy ? "bg-[var(--amber)]/90 text-black" : "bg-black/70 text-muted-foreground"}`}>
+                      {terrain ? TERRAIN_LABEL[terrain] : `🔓 $${(cost / 1_000_000).toFixed(2)}M`}
+                    </span>
+                  </div>
+                </div>
+              );
+            }
+
+            // Parcela desbloqueada con terreno (no construible aún)
+            if (terrain) {
+              return (
+                <div
+                  key={i}
+                  className="absolute pointer-events-none"
+                  style={{ left: pos.left - TILE_W / 2, top: pos.top, width: TILE_W, height: TILE_H * 1.2, zIndex: z }}
+                  title={TERRAIN_LABEL[terrain]}
+                >
+                  <div className="absolute select-none text-3xl" style={{ left: TILE_W * 0.3, top: TILE_H * 0.2, filter: "drop-shadow(0 6px 8px rgba(0,0,0,0.6))" }}>
+                    {TERRAIN_EMOJI[terrain]}
+                  </div>
+                </div>
+              );
+            }
+
+            const f = fincaByXY.get(key);
+            const fa = factoryByXY.get(key);
             const isSelected = !!(f && selectedId === f.id);
             const compatible = !!(f && dragType && factoryFor[f.type] === dragType && !fa);
             const incompatible = !!(f && dragType && (factoryFor[f.type] !== dragType || fa));
             const isHover = !!(f && hoverTile === f.id);
             const rot = f ? rotPct(f.stock, capacidad) : 0;
-            const pos = isoPos(x, y);
-            const z = (x + y) * 10;
             const showWaterDrip = !!(f && state.tech.riego && (f.type === "vid" || f.type === "olivo"));
 
             return (
@@ -438,7 +516,7 @@ export function IsometricGrid({ onSelect, selectedId }: { onSelect: (f: Finca) =
         {/* Camera controls */}
         <div className="glass absolute right-2 top-2 flex flex-col gap-1 rounded-xl p-1 z-[800]">
           <button
-            onClick={() => setZoom((z) => Math.min(2, z + 0.15))}
+            onClick={() => setZoom((z) => Math.min(4, z + 0.2))}
             className="flex h-8 w-8 items-center justify-center rounded-lg hover:bg-white/10"
             title="Zoom +"
           >

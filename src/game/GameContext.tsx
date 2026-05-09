@@ -4,6 +4,79 @@ import { generatePool, generateWorker, type Worker } from "./workers";
 export type CropType = "vid" | "olivo" | "nogal";
 export type FactoryType = "bodega" | "almazara" | "nuez";
 export type TechId = "riego" | "mecanizacion" | "drones";
+export type Terrain = "mountain" | "river" | "rocks";
+
+// ─── Mapa 20×20 ───────────────────────────────────────────────
+export const MAP_SIZE = 20;
+export const MAP_CENTER = 10;
+export const INITIAL_RADIUS = 2; // 5×5 desbloqueado al inicio (centro ±2)
+
+function mulberry32(seed: number) {
+  return function () {
+    let t = (seed += 0x6D2B79F5);
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+function generateTerrain(seed = 1337): Record<string, Terrain> {
+  const rng = mulberry32(seed);
+  const t: Record<string, Terrain> = {};
+  // Cordón de cerros al oeste y noreste (clusters)
+  const seeds: Array<[number, number, Terrain, number]> = [
+    [2, 4, "mountain", 4],
+    [3, 14, "mountain", 3],
+    [16, 3, "mountain", 3],
+    [17, 16, "mountain", 4],
+    [9, 1, "mountain", 2],
+  ];
+  for (const [cx, cy, kind, r] of seeds) {
+    for (let dx = -r; dx <= r; dx++) {
+      for (let dy = -r; dy <= r; dy++) {
+        const x = cx + dx, y = cy + dy;
+        if (x < 0 || y < 0 || x >= MAP_SIZE || y >= MAP_SIZE) continue;
+        const dist = Math.hypot(dx, dy);
+        if (dist <= r && rng() > dist / (r + 1) * 0.5) t[`${x},${y}`] = kind;
+      }
+    }
+  }
+  // Río/arroyo seco: línea sinuosa N-S
+  let rx = 6;
+  for (let y = 0; y < MAP_SIZE; y++) {
+    rx += rng() > 0.5 ? 1 : -1;
+    rx = Math.max(0, Math.min(MAP_SIZE - 1, rx));
+    if (!t[`${rx},${y}`]) t[`${rx},${y}`] = "river";
+  }
+  // Zonas de piedra dispersas
+  for (let i = 0; i < 22; i++) {
+    const x = Math.floor(rng() * MAP_SIZE);
+    const y = Math.floor(rng() * MAP_SIZE);
+    if (!t[`${x},${y}`]) t[`${x},${y}`] = "rocks";
+  }
+  // Limpiar centro 5×5 + casillero del almacén
+  for (let dx = -INITIAL_RADIUS; dx <= INITIAL_RADIUS; dx++) {
+    for (let dy = -INITIAL_RADIUS; dy <= INITIAL_RADIUS; dy++) {
+      delete t[`${MAP_CENTER + dx},${MAP_CENTER + dy}`];
+    }
+  }
+  return t;
+}
+
+function initialUnlocked(): string[] {
+  const out: string[] = [];
+  for (let dx = -INITIAL_RADIUS; dx <= INITIAL_RADIUS; dx++) {
+    for (let dy = -INITIAL_RADIUS; dy <= INITIAL_RADIUS; dy++) {
+      out.push(`${MAP_CENTER + dx},${MAP_CENTER + dy}`);
+    }
+  }
+  return out;
+}
+
+export function parcelCost(x: number, y: number): number {
+  const d = Math.max(Math.abs(x - MAP_CENTER), Math.abs(y - MAP_CENTER));
+  return Math.min(5_000_000, 400_000 + (d - INITIAL_RADIUS) * 250_000);
+}
 
 export interface Finca {
   id: string;
@@ -97,6 +170,9 @@ export interface GameState {
   researching: Researching | null;
   // Moratoria
   moratoria: Moratoria;
+  // Mapa 20×20
+  terrain: Record<string, Terrain>;
+  unlocked: string[];
 }
 
 const FINCA_NAMES = ["Famatina", "Chilecito", "Valle del Bermejo", "Nonogasta", "Vichigasta", "Anguinán", "Sañogasta", "Malligasta"];
@@ -129,10 +205,10 @@ const initial: GameState = {
   ultimoAumento: 0,
   mes: 1,
   fincas: [
-    { id: "f1", x: 0, y: 0, type: "vid", name: "Famatina", stock: 0, growth: 30 },
-    { id: "f2", x: 2, y: 0, type: "olivo", name: "Chilecito", stock: 0, growth: 50 },
-    { id: "f3", x: 0, y: 2, type: "nogal", name: "Valle del Bermejo", stock: 0, growth: 20 },
-    { id: "f4", x: 2, y: 2, type: "vid", name: "Nonogasta", stock: 0, growth: 45 },
+    { id: "f1", x: MAP_CENTER - 1, y: MAP_CENTER - 1, type: "vid", name: "Famatina", stock: 0, growth: 30 },
+    { id: "f2", x: MAP_CENTER + 1, y: MAP_CENTER - 1, type: "olivo", name: "Chilecito", stock: 0, growth: 50 },
+    { id: "f3", x: MAP_CENTER - 1, y: MAP_CENTER + 1, type: "nogal", name: "Valle del Bermejo", stock: 0, growth: 20 },
+    { id: "f4", x: MAP_CENTER + 1, y: MAP_CENTER + 1, type: "vid", name: "Nonogasta", stock: 0, growth: 45 },
   ],
   factories: [],
   eventos: [
@@ -148,6 +224,8 @@ const initial: GameState = {
   tech: { riego: false, mecanizacion: false, drones: false },
   researching: null,
   moratoria: { activa: false, cuotasRestantes: 0, cuotaMensual: 0, objetivoUSD: 0, exportadoUSD: 0, cumplida: false },
+  terrain: generateTerrain(1337),
+  unlocked: initialUnlocked(),
 };
 
 type Action =
@@ -168,6 +246,7 @@ type Action =
   | { type: "PAY_RAISE"; pct: number }
   | { type: "LIQUIDAR"; usd: number }
   | { type: "BUY_FINCA"; cropType: CropType }
+  | { type: "BUY_PARCEL"; x: number; y: number }
   | { type: "RESEARCH"; tech: TechId }
   | { type: "TAKE_MORATORIA" }
   | { type: "RESET_GAME" }
@@ -539,11 +618,14 @@ function reducer(state: GameState, action: Action): GameState {
       const cost = 800_000;
       if (state.pesos < cost) return state;
       const used = new Set(state.fincas.map((f) => `${f.x},${f.y}`));
+      const occFa = new Set(state.factories.map((f) => `${f.x},${f.y}`));
       let pos: { x: number; y: number } | null = null;
-      for (let y = 0; y < 5 && !pos; y++) {
-        for (let x = 0; x < 5 && !pos; x++) {
-          if (!used.has(`${x},${y}`)) pos = { x, y };
-        }
+      for (const key of state.unlocked) {
+        if (used.has(key) || occFa.has(key) || state.terrain[key]) continue;
+        const [x, y] = key.split(",").map(Number);
+        if (x === MAP_CENTER && y === MAP_CENTER) continue; // almacén
+        pos = { x, y };
+        break;
       }
       if (!pos) return state;
       const name = FINCA_NAMES[state.fincas.length % FINCA_NAMES.length];
@@ -551,6 +633,23 @@ function reducer(state: GameState, action: Action): GameState {
         ...state,
         pesos: state.pesos - cost,
         fincas: [...state.fincas, { id: `f${Date.now()}`, x: pos.x, y: pos.y, type: action.cropType, name, stock: 0, growth: 10 }],
+      };
+    }
+
+    case "BUY_PARCEL": {
+      const key = `${action.x},${action.y}`;
+      if (state.unlocked.includes(key)) return state;
+      if (action.x < 0 || action.y < 0 || action.x >= MAP_SIZE || action.y >= MAP_SIZE) return state;
+      const cost = parcelCost(action.x, action.y);
+      if (state.pesos < cost) return state;
+      return {
+        ...state,
+        pesos: state.pesos - cost,
+        unlocked: [...state.unlocked, key],
+        eventos: [
+          { id: `parc${Date.now()}`, title: "Parcela adquirida", description: `Se compró la parcela (${action.x},${action.y}) por ${(cost / 1_000_000).toFixed(2)}M.`, kind: "good" as const, month: state.mes },
+          ...state.eventos,
+        ].slice(0, 20),
       };
     }
 
@@ -614,7 +713,8 @@ interface Ctx {
 
 const GameCtx = createContext<Ctx | null>(null);
 
-const SAVE_KEY = "lra_tycoon_v4_save";
+const SAVE_KEY = "lra_tycoon_v5_save";
+const OLD_SAVE_KEYS = ["lra_tycoon_v4_save", "lra_tycoon_v3_save"];
 
 export function GameProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(reducer, initial);
@@ -628,16 +728,26 @@ export function GameProvider({ children }: { children: ReactNode }) {
     if (loadedRef.current) return;
     loadedRef.current = true;
     try {
+      if (typeof localStorage !== "undefined") {
+        // Limpiar saves viejos (v4/v3) — el mapa cambió a 20×20
+        for (const k of OLD_SAVE_KEYS) {
+          if (localStorage.getItem(k)) {
+            localStorage.removeItem(k);
+            console.info(`[save] partida vieja (${k}) descartada — nuevo mapa 20×20`);
+          }
+        }
+      }
       const raw = typeof localStorage !== "undefined" ? localStorage.getItem(SAVE_KEY) : null;
       if (raw) {
         const parsed = JSON.parse(raw) as GameState;
         if (parsed && typeof parsed.mes === "number") {
-          // Defaults para campos nuevos por compatibilidad
           if (!parsed.researching) parsed.researching = null;
           if (!parsed.tech) parsed.tech = { riego: false, mecanizacion: false, drones: false };
           if (!parsed.moratoria) parsed.moratoria = initial.moratoria;
           if (!parsed.personalDisponible) parsed.personalDisponible = generatePool(6, parsed.salarioMensual ?? 350_000);
           if (!parsed.personalContratado) parsed.personalContratado = initial.personalContratado;
+          if (!parsed.terrain) parsed.terrain = initial.terrain;
+          if (!parsed.unlocked) parsed.unlocked = initial.unlocked;
           dispatch({ type: "LOAD_STATE", state: parsed });
           lastSavedMes.current = parsed.mes;
         }
