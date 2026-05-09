@@ -306,15 +306,79 @@ export function IsometricGrid({ onSelect, selectedId }: { onSelect: (f: Finca) =
           {Array.from({ length: GRID * GRID }).map((_, i) => {
             const x = i % GRID;
             const y = Math.floor(i / GRID);
-            const f = fincaByXY.get(`${x},${y}`);
-            const fa = factoryByXY.get(`${x},${y}`);
+            const key = `${x},${y}`;
+            if (x === WAREHOUSE_GRID.x && y === WAREHOUSE_GRID.y) return null;
+            const terrain = state.terrain[key];
+            const locked = !unlockedSet.has(key);
+            const pos = isoPos(x, y);
+            const z = (x + y) * 10;
+
+            // Parcela bloqueada (clickeable para comprar)
+            if (locked) {
+              const cost = parcelCost(x, y);
+              const canBuy = state.pesos >= cost;
+              return (
+                <div
+                  key={i}
+                  onClick={(e) => { e.stopPropagation(); if (canBuy) dispatch({ type: "BUY_PARCEL", x, y }); }}
+                  className="absolute cursor-pointer group"
+                  style={{ left: pos.left - TILE_W / 2, top: pos.top, width: TILE_W, height: TILE_H * 1.2, zIndex: z }}
+                  title={`Parcela bloqueada · $${(cost / 1_000_000).toFixed(2)}M`}
+                >
+                  <div
+                    className="absolute"
+                    style={{
+                      left: TILE_W * 0.05, top: TILE_H * 0.45,
+                      width: TILE_W * 0.9, height: TILE_H * 0.9,
+                      transform: "rotateX(60deg) rotateZ(45deg)",
+                      background: terrain
+                        ? "oklch(0.18 0.02 240 / 0.5)"
+                        : "repeating-linear-gradient(45deg, oklch(0.25 0.02 240 / 0.5) 0 8px, oklch(0.18 0.02 240 / 0.4) 8px 16px)",
+                      border: `1px dashed ${canBuy ? "oklch(0.78 0.17 70 / 0.5)" : "oklch(0.5 0.02 240 / 0.4)"}`,
+                      borderRadius: 4,
+                    }}
+                  />
+                  {terrain ? (
+                    <div className="pointer-events-none absolute select-none text-2xl" style={{ left: TILE_W * 0.32, top: TILE_H * 0.35, opacity: 0.85, filter: "drop-shadow(0 4px 4px rgba(0,0,0,0.5))" }}>
+                      {TERRAIN_EMOJI[terrain]}
+                    </div>
+                  ) : (
+                    <div className="pointer-events-none absolute opacity-0 group-hover:opacity-100 transition" style={{ left: TILE_W * 0.28, top: TILE_H * 0.4 }}>
+                      <Lock size={18} className={canBuy ? "text-[var(--amber)]" : "text-muted-foreground"} />
+                    </div>
+                  )}
+                  <div className="pointer-events-none absolute left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition" style={{ top: -2, zIndex: 700 }}>
+                    <span className={`whitespace-nowrap rounded-md px-1.5 py-0.5 text-[9px] font-bold backdrop-blur ${canBuy ? "bg-[var(--amber)]/90 text-black" : "bg-black/70 text-muted-foreground"}`}>
+                      {terrain ? TERRAIN_LABEL[terrain] : `🔓 $${(cost / 1_000_000).toFixed(2)}M`}
+                    </span>
+                  </div>
+                </div>
+              );
+            }
+
+            // Parcela desbloqueada con terreno (no construible aún)
+            if (terrain) {
+              return (
+                <div
+                  key={i}
+                  className="absolute pointer-events-none"
+                  style={{ left: pos.left - TILE_W / 2, top: pos.top, width: TILE_W, height: TILE_H * 1.2, zIndex: z }}
+                  title={TERRAIN_LABEL[terrain]}
+                >
+                  <div className="absolute select-none text-3xl" style={{ left: TILE_W * 0.3, top: TILE_H * 0.2, filter: "drop-shadow(0 6px 8px rgba(0,0,0,0.6))" }}>
+                    {TERRAIN_EMOJI[terrain]}
+                  </div>
+                </div>
+              );
+            }
+
+            const f = fincaByXY.get(key);
+            const fa = factoryByXY.get(key);
             const isSelected = !!(f && selectedId === f.id);
             const compatible = !!(f && dragType && factoryFor[f.type] === dragType && !fa);
             const incompatible = !!(f && dragType && (factoryFor[f.type] !== dragType || fa));
             const isHover = !!(f && hoverTile === f.id);
             const rot = f ? rotPct(f.stock, capacidad) : 0;
-            const pos = isoPos(x, y);
-            const z = (x + y) * 10;
             const showWaterDrip = !!(f && state.tech.riego && (f.type === "vid" || f.type === "olivo"));
 
             return (
