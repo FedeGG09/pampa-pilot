@@ -205,10 +205,10 @@ const initial: GameState = {
   ultimoAumento: 0,
   mes: 1,
   fincas: [
-    { id: "f1", x: 0, y: 0, type: "vid", name: "Famatina", stock: 0, growth: 30 },
-    { id: "f2", x: 2, y: 0, type: "olivo", name: "Chilecito", stock: 0, growth: 50 },
-    { id: "f3", x: 0, y: 2, type: "nogal", name: "Valle del Bermejo", stock: 0, growth: 20 },
-    { id: "f4", x: 2, y: 2, type: "vid", name: "Nonogasta", stock: 0, growth: 45 },
+    { id: "f1", x: MAP_CENTER - 1, y: MAP_CENTER - 1, type: "vid", name: "Famatina", stock: 0, growth: 30 },
+    { id: "f2", x: MAP_CENTER + 1, y: MAP_CENTER - 1, type: "olivo", name: "Chilecito", stock: 0, growth: 50 },
+    { id: "f3", x: MAP_CENTER - 1, y: MAP_CENTER + 1, type: "nogal", name: "Valle del Bermejo", stock: 0, growth: 20 },
+    { id: "f4", x: MAP_CENTER + 1, y: MAP_CENTER + 1, type: "vid", name: "Nonogasta", stock: 0, growth: 45 },
   ],
   factories: [],
   eventos: [
@@ -224,6 +224,8 @@ const initial: GameState = {
   tech: { riego: false, mecanizacion: false, drones: false },
   researching: null,
   moratoria: { activa: false, cuotasRestantes: 0, cuotaMensual: 0, objetivoUSD: 0, exportadoUSD: 0, cumplida: false },
+  terrain: generateTerrain(1337),
+  unlocked: initialUnlocked(),
 };
 
 type Action =
