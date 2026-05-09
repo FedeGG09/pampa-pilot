@@ -516,7 +516,7 @@ export function IsometricGrid({ onSelect, selectedId }: { onSelect: (f: Finca) =
         {/* Camera controls */}
         <div className="glass absolute right-2 top-2 flex flex-col gap-1 rounded-xl p-1 z-[800]">
           <button
-            onClick={() => setZoom((z) => Math.min(2, z + 0.15))}
+            onClick={() => setZoom((z) => Math.min(4, z + 0.2))}
             className="flex h-8 w-8 items-center justify-center rounded-lg hover:bg-white/10"
             title="Zoom +"
           >
