@@ -223,7 +223,8 @@ export function IsometricGrid({ onSelect, selectedId }: { onSelect: (f: Finca) =
     return m;
   }, [state.factories]);
 
-  const roads = useMemo(() => buildRoadSet(state.fincas), [state.fincas]);
+  const unlockedSet = useMemo(() => new Set(state.unlocked), [state.unlocked]);
+  const roads = useMemo(() => buildRoadSet(state.fincas, state.terrain), [state.fincas, state.terrain]);
 
   // Vehículos: tractores (1 por finca activa, 2 si mecanización)
   const tractorsPerFinca = state.tech.mecanizacion ? 2 : 1;
