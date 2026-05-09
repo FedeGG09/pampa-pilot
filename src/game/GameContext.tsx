@@ -170,6 +170,9 @@ export interface GameState {
   researching: Researching | null;
   // Moratoria
   moratoria: Moratoria;
+  // Mapa 20×20
+  terrain: Record<string, Terrain>;
+  unlocked: string[];
 }
 
 const FINCA_NAMES = ["Famatina", "Chilecito", "Valle del Bermejo", "Nonogasta", "Vichigasta", "Anguinán", "Sañogasta", "Malligasta"];
