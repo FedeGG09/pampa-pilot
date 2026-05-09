@@ -246,6 +246,7 @@ type Action =
   | { type: "PAY_RAISE"; pct: number }
   | { type: "LIQUIDAR"; usd: number }
   | { type: "BUY_FINCA"; cropType: CropType }
+  | { type: "BUY_PARCEL"; x: number; y: number }
   | { type: "RESEARCH"; tech: TechId }
   | { type: "TAKE_MORATORIA" }
   | { type: "RESET_GAME" }
