@@ -35,12 +35,23 @@ function rotPct(stock: number, capacidad: number) {
   return Math.min(1, (stock - capacidad) / Math.max(capacidad, 1));
 }
 
-const TILE_W = 168;
-const TILE_H = 96;
-const GRID = 5;
+const TILE_W = 96;
+const TILE_H = 56;
+const GRID = MAP_SIZE; // 20
 const BOARD_W = GRID * TILE_W + 200;
 const BOARD_H = GRID * TILE_H + 280;
-const WAREHOUSE_GRID = { x: -1, y: 2 };
+const WAREHOUSE_GRID = { x: MAP_CENTER, y: MAP_CENTER };
+
+const TERRAIN_EMOJI: Record<Terrain, string> = {
+  mountain: "⛰️",
+  river: "🌊",
+  rocks: "🪨",
+};
+const TERRAIN_LABEL: Record<Terrain, string> = {
+  mountain: "Cerro (no construible)",
+  river: "Arroyo seco (requiere puente)",
+  rocks: "Pedregal (requiere limpieza)",
+};
 
 function isoPos(x: number, y: number) {
   return {
@@ -50,20 +61,22 @@ function isoPos(x: number, y: number) {
 }
 const WAREHOUSE = isoPos(WAREHOUSE_GRID.x, WAREHOUSE_GRID.y);
 
-function buildRoadSet(fincas: Finca[]): Set<string> {
+function buildRoadSet(fincas: Finca[], blocked: Record<string, Terrain>): Set<string> {
   const roads = new Set<string>();
   const wx = WAREHOUSE_GRID.x;
   const wy = WAREHOUSE_GRID.y;
   for (const f of fincas) {
-    // horizontal segment along y=wy
     const [x0, x1] = wx < f.x ? [wx + 1, f.x] : [f.x + 1, wx];
     for (let x = x0; x <= x1; x++) {
-      if (!(x === f.x && wy === f.y)) roads.add(`${x},${wy}`);
+      if (x === f.x && wy === f.y) continue;
+      if (blocked[`${x},${wy}`]) continue;
+      roads.add(`${x},${wy}`);
     }
-    // vertical from wy to f.y at column f.x
     const [y0, y1] = wy < f.y ? [wy + 1, f.y] : [f.y + 1, wy];
     for (let y = y0; y <= y1; y++) {
-      if (!(f.x === f.x && y === f.y)) roads.add(`${f.x},${y}`);
+      if (f.x === f.x && y === f.y) continue;
+      if (blocked[`${f.x},${y}`]) continue;
+      roads.add(`${f.x},${y}`);
     }
     roads.delete(`${f.x},${f.y}`);
   }
