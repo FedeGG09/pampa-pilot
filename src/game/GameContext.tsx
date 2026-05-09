@@ -4,6 +4,79 @@ import { generatePool, generateWorker, type Worker } from "./workers";
 export type CropType = "vid" | "olivo" | "nogal";
 export type FactoryType = "bodega" | "almazara" | "nuez";
 export type TechId = "riego" | "mecanizacion" | "drones";
+export type Terrain = "mountain" | "river" | "rocks";
+
+// ─── Mapa 20×20 ───────────────────────────────────────────────
+export const MAP_SIZE = 20;
+export const MAP_CENTER = 10;
+export const INITIAL_RADIUS = 2; // 5×5 desbloqueado al inicio (centro ±2)
+
+function mulberry32(seed: number) {
+  return function () {
+    let t = (seed += 0x6D2B79F5);
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+function generateTerrain(seed = 1337): Record<string, Terrain> {
+  const rng = mulberry32(seed);
+  const t: Record<string, Terrain> = {};
+  // Cordón de cerros al oeste y noreste (clusters)
+  const seeds: Array<[number, number, Terrain, number]> = [
+    [2, 4, "mountain", 4],
+    [3, 14, "mountain", 3],
+    [16, 3, "mountain", 3],
+    [17, 16, "mountain", 4],
+    [9, 1, "mountain", 2],
+  ];
+  for (const [cx, cy, kind, r] of seeds) {
+    for (let dx = -r; dx <= r; dx++) {
+      for (let dy = -r; dy <= r; dy++) {
+        const x = cx + dx, y = cy + dy;
+        if (x < 0 || y < 0 || x >= MAP_SIZE || y >= MAP_SIZE) continue;
+        const dist = Math.hypot(dx, dy);
+        if (dist <= r && rng() > dist / (r + 1) * 0.5) t[`${x},${y}`] = kind;
+      }
+    }
+  }
+  // Río/arroyo seco: línea sinuosa N-S
+  let rx = 6;
+  for (let y = 0; y < MAP_SIZE; y++) {
+    rx += rng() > 0.5 ? 1 : -1;
+    rx = Math.max(0, Math.min(MAP_SIZE - 1, rx));
+    if (!t[`${rx},${y}`]) t[`${rx},${y}`] = "river";
+  }
+  // Zonas de piedra dispersas
+  for (let i = 0; i < 22; i++) {
+    const x = Math.floor(rng() * MAP_SIZE);
+    const y = Math.floor(rng() * MAP_SIZE);
+    if (!t[`${x},${y}`]) t[`${x},${y}`] = "rocks";
+  }
+  // Limpiar centro 5×5 + casillero del almacén
+  for (let dx = -INITIAL_RADIUS; dx <= INITIAL_RADIUS; dx++) {
+    for (let dy = -INITIAL_RADIUS; dy <= INITIAL_RADIUS; dy++) {
+      delete t[`${MAP_CENTER + dx},${MAP_CENTER + dy}`];
+    }
+  }
+  return t;
+}
+
+function initialUnlocked(): string[] {
+  const out: string[] = [];
+  for (let dx = -INITIAL_RADIUS; dx <= INITIAL_RADIUS; dx++) {
+    for (let dy = -INITIAL_RADIUS; dy <= INITIAL_RADIUS; dy++) {
+      out.push(`${MAP_CENTER + dx},${MAP_CENTER + dy}`);
+    }
+  }
+  return out;
+}
+
+export function parcelCost(x: number, y: number): number {
+  const d = Math.max(Math.abs(x - MAP_CENTER), Math.abs(y - MAP_CENTER));
+  return Math.min(5_000_000, 400_000 + (d - INITIAL_RADIUS) * 250_000);
+}
 
 export interface Finca {
   id: string;
