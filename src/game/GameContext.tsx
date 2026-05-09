@@ -728,16 +728,26 @@ export function GameProvider({ children }: { children: ReactNode }) {
     if (loadedRef.current) return;
     loadedRef.current = true;
     try {
+      if (typeof localStorage !== "undefined") {
+        // Limpiar saves viejos (v4/v3) — el mapa cambió a 20×20
+        for (const k of OLD_SAVE_KEYS) {
+          if (localStorage.getItem(k)) {
+            localStorage.removeItem(k);
+            console.info(`[save] partida vieja (${k}) descartada — nuevo mapa 20×20`);
+          }
+        }
+      }
       const raw = typeof localStorage !== "undefined" ? localStorage.getItem(SAVE_KEY) : null;
       if (raw) {
         const parsed = JSON.parse(raw) as GameState;
         if (parsed && typeof parsed.mes === "number") {
-          // Defaults para campos nuevos por compatibilidad
           if (!parsed.researching) parsed.researching = null;
           if (!parsed.tech) parsed.tech = { riego: false, mecanizacion: false, drones: false };
           if (!parsed.moratoria) parsed.moratoria = initial.moratoria;
           if (!parsed.personalDisponible) parsed.personalDisponible = generatePool(6, parsed.salarioMensual ?? 350_000);
           if (!parsed.personalContratado) parsed.personalContratado = initial.personalContratado;
+          if (!parsed.terrain) parsed.terrain = initial.terrain;
+          if (!parsed.unlocked) parsed.unlocked = initial.unlocked;
           dispatch({ type: "LOAD_STATE", state: parsed });
           lastSavedMes.current = parsed.mes;
         }
