@@ -714,12 +714,13 @@ interface TileProps {
   hasTank: boolean;
   tractorCount: number;
   hasDrones: boolean;
+  disconnected?: boolean;
   onSelect: (f: Finca) => void;
 }
 
 const Tile = memo(function Tile({
   pos, z, finca: f, factory: fa, rot, isSelected, compatible, incompatible, isHover, shake,
-  showWaterDrip, hasTank, tractorCount, hasDrones, onSelect,
+  showWaterDrip, hasTank, tractorCount, hasDrones, disconnected, onSelect,
 }: TileProps) {
   const ringColor = incompatible && isHover ? "oklch(0.62 0.24 25)" : compatible && isHover ? "var(--vine-green)" : "var(--amber)";
   const showRing = isSelected || (compatible && isHover) || (incompatible && isHover);
