@@ -36,6 +36,8 @@ export function generateWorker(tipo: Worker["tipo"] = "golondrina", baseSalario 
   const { nombre, apellido } = pickUniqueName();
   const exp = Math.max(1, Math.min(10, Math.round(1 + Math.random() * 9)));
   const seed = encodeURIComponent(`${nombre}-${apellido}`);
+  // Avatares ilustrados estilo retrato — más cálidos y agrarios que los antiguos "personas"
+  // Paleta de fondos tierra/oliva/borgoña que combina con el tema
   return {
     id: `w_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
     nombre,
@@ -44,7 +46,7 @@ export function generateWorker(tipo: Worker["tipo"] = "golondrina", baseSalario 
     moral: 60 + Math.round(Math.random() * 30),
     tipo,
     salario: Math.round(baseSalario * (0.8 + exp * 0.05)),
-    avatar: `https://api.dicebear.com/7.x/personas/svg?seed=${seed}&backgroundColor=f4a261,e76f51,2a9d8f,e9c46a&backgroundType=gradientLinear`,
+    avatar: `https://api.dicebear.com/9.x/lorelei/svg?seed=${seed}&backgroundColor=c19a6b,a47148,8b6f47,d4a574,9c6644&backgroundType=solid&radius=50`,
   };
 }
 
