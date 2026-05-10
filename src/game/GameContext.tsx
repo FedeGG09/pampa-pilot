@@ -78,6 +78,42 @@ export function parcelCost(x: number, y: number): number {
   return Math.min(5_000_000, 400_000 + (d - INITIAL_RADIUS) * 250_000);
 }
 
+// ─── Logística: una finca está conectada si existe un camino en L
+// (horizontal→vertical o vertical→horizontal) sin terreno bloqueante
+// entre la finca y el Almacén Central.
+export function isFincaConnected(
+  fx: number,
+  fy: number,
+  terrain: Record<string, Terrain>,
+): boolean {
+  if (fx === MAP_CENTER && fy === MAP_CENTER) return true;
+  const wx = MAP_CENTER, wy = MAP_CENTER;
+  // L1: mover horizontal por wy, luego vertical por fx
+  const pathClear = (
+    horizFirst: boolean,
+  ): boolean => {
+    if (horizFirst) {
+      const [a, b] = wx < fx ? [wx + 1, fx] : [fx, wx - 1];
+      for (let x = a; x <= b; x++) {
+        if (x === fx && wy === fy) continue;
+        if (terrain[`${x},${wy}`]) return false;
+      }
+      const [c, d] = wy < fy ? [wy + 1, fy - 1] : [fy + 1, wy - 1];
+      for (let y = c; y <= d; y++) if (terrain[`${fx},${y}`]) return false;
+    } else {
+      const [a, b] = wy < fy ? [wy + 1, fy] : [fy, wy - 1];
+      for (let y = a; y <= b; y++) {
+        if (y === fy && wx === fx) continue;
+        if (terrain[`${wx},${y}`]) return false;
+      }
+      const [c, d] = wx < fx ? [wx + 1, fx - 1] : [fx + 1, wx - 1];
+      for (let x = c; x <= d; x++) if (terrain[`${x},${fy}`]) return false;
+    }
+    return true;
+  };
+  return pathClear(true) || pathClear(false);
+}
+
 export interface Finca {
   id: string;
   x: number;
@@ -297,7 +333,14 @@ function reducer(state: GameState, action: Action): GameState {
       const yieldMult = state.tech.riego ? 1.2 : 1;
       const capacidad = (state.trabajadoresPermanentes + state.trabajadoresGolondrina) * 200;
       let usadoCap = 0;
+      let disconnectedCount = 0;
       const fincas = state.fincas.map((f) => {
+        const connected = isFincaConnected(f.x, f.y, state.terrain);
+        if (!connected) {
+          disconnectedCount++;
+          // Sin conexión vial al Almacén → producción y crecimiento se detienen
+          return { ...f, growth: Math.max(0, f.growth - 1) };
+        }
         let growth = Math.min(100, f.growth + (harvest ? 8 : 4));
         let stock = f.stock;
         if (harvest && growth >= 80) {
