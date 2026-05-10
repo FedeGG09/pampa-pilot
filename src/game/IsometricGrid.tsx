@@ -449,9 +449,7 @@ export function IsometricGrid({ onSelect, selectedId }: { onSelect: (f: Finca) =
                     }}
                   />
                   {terrain ? (
-                    <div className="pointer-events-none absolute select-none text-2xl" style={{ left: TILE_W * 0.32, top: TILE_H * 0.35, opacity: 0.85, filter: "drop-shadow(0 4px 4px rgba(0,0,0,0.5))" }}>
-                      {TERRAIN_EMOJI[terrain]}
-                    </div>
+                    <TerrainTile kind={terrain} />
                   ) : (
                     <div className="pointer-events-none absolute opacity-0 group-hover:opacity-100 transition" style={{ left: TILE_W * 0.28, top: TILE_H * 0.4 }}>
                       <Lock size={18} className={canBuy ? "text-[var(--amber)]" : "text-muted-foreground"} />
@@ -475,9 +473,7 @@ export function IsometricGrid({ onSelect, selectedId }: { onSelect: (f: Finca) =
                   style={{ left: pos.left - TILE_W / 2, top: pos.top, width: TILE_W, height: TILE_H * 1.2, zIndex: z }}
                   title={TERRAIN_LABEL[terrain]}
                 >
-                  <div className="absolute select-none text-3xl" style={{ left: TILE_W * 0.3, top: TILE_H * 0.2, filter: "drop-shadow(0 6px 8px rgba(0,0,0,0.6))" }}>
-                    {TERRAIN_EMOJI[terrain]}
-                  </div>
+                  <TerrainTile kind={terrain} />
                 </div>
               );
             }
