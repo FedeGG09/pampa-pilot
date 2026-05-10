@@ -98,3 +98,8 @@
   border: 1px solid oklch(0.7 0.04 260 / 0.2);
   box-shadow: var(--shadow-glass);
 }
+
+@keyframes riverFlow {
+  0% { background-position: 0 0; }
+  100% { background-position: 80px 0; }
+}
