@@ -1,7 +1,6 @@
 export type Severity = 'low' | 'medium' | 'high' | 'critical'
 export type CropType = 'soja' | 'maiz' | 'trigo' | 'girasol' | 'algodon' | 'other'
-export type DecisionType = 'agronomic' | 'financial' | 'monitor' | 'mixed'
-export type SuggestedFlow = 'dtc' | 'finance' | 'none'
+export type ChatAgentType = 'agronomist' | 'finance' | 'machinery' | 'people_legal'
 
 export interface DtcDiagnosisRequest {
   code: string
@@ -60,72 +59,13 @@ export interface OrchestratorAnalyzeRequest {
 }
 
 export interface OrchestratorAnalyzeResponse {
-  decision: DecisionType
+  decision: 'agronomic' | 'financial' | 'monitor' | 'mixed'
   recommendation: string
   reason: string
   confidence: number
-  suggested_flow: SuggestedFlow
+  suggested_flow: 'dtc' | 'finance' | 'none'
   next_actions: string[]
   summary: string
-}
-
-export interface KPI {
-  label: string
-  value: string
-  unit: string
-  delta: string
-  positive: boolean
-}
-
-export interface ChartPoint {
-  label: string
-  realized: number
-  projected: number
-}
-
-export interface Climate {
-  ubicacion: string
-  temp: number
-  condicion: string
-  humedad: number
-  viento: number
-  pronostico: string
-}
-
-export interface MarketQuote {
-  producto: string
-  precio: string
-  unidad: string
-  delta: string
-}
-
-export interface MachineAlert {
-  titulo: string
-  subtitle: string
-  severity: Severity
-  confidence: number
-  progress: number
-  action: string
-}
-
-export interface LotSummary {
-  id: string
-  nombre: string
-  cultivo: CropType
-  hectareas: number
-  rinde: number
-  ndvi: number
-  humedad: number
-}
-
-export interface DashboardOverviewResponse {
-  generated_at: string
-  kpis: KPI[]
-  chart: ChartPoint[]
-  clima: Climate
-  pizarra_rosario: MarketQuote[]
-  machine_alert: MachineAlert
-  recent_lots: LotSummary[]
 }
 
 export interface SelectedLot {
@@ -144,4 +84,60 @@ export interface AppLogEntry {
   level: 'info' | 'warn' | 'error'
   title: string
   detail: string
+}
+
+export interface AgronomistChatResponse {
+  reply: string
+}
+
+/* Nuevo chat supervisor / memoria / multiagente */
+
+export interface ChatMessage {
+  role: 'user' | 'assistant' | 'system'
+  content: string
+}
+
+export interface SupervisorChatRequest {
+  user_id: string
+  thread_id?: string | null
+  message: string
+  history: ChatMessage[]
+  context: Record<string, unknown>
+}
+
+export interface SupervisorChatResponse {
+  thread_id: string
+  agent: ChatAgentType
+  reply: string
+  needs_clarification: boolean
+  clarification_question: string | null
+  llm_used: boolean
+  llm_provider: string | null
+  knowledge_topics: string[]
+  tool_results: Record<string, unknown>
+  conversation_title: string | null
+}
+
+export interface ConversationItem {
+  thread_id: string
+  user_id: string
+  agent: ChatAgentType | string
+  title: string | null
+  summary: string | null
+  updated_at: string | null
+  turns: number
+}
+
+export interface ConversationSearchResponse {
+  items: ConversationItem[]
+}
+
+export interface ConversationDetailResponse {
+  thread_id: string
+  user_id: string
+  agent: ChatAgentType | string
+  title: string | null
+  summary: string | null
+  updated_at: string | null
+  messages: ChatMessage[]
 }

@@ -1,12 +1,16 @@
 import type {
-  DashboardOverviewResponse,
+  AgronomistChatResponse,
+  ConversationDetailResponse,
+  ConversationSearchResponse,
   DtcDiagnosisRequest,
   DtcDiagnosisResponse,
   FinanceSimulationRequest,
   FinanceSimulationResponse,
   OrchestratorAnalyzeRequest,
   OrchestratorAnalyzeResponse,
-} from '@/types/api';
+  SupervisorChatRequest,
+  SupervisorChatResponse,
+} from '@/types/api'
 
 class ApiError extends Error {
   constructor(
@@ -14,91 +18,81 @@ class ApiError extends Error {
     public readonly status?: number,
     public readonly details?: unknown,
   ) {
-    super(message);
-    this.name = 'ApiError';
+    super(message)
+    this.name = 'ApiError'
   }
 }
 
-const BASE_URL = (
-  import.meta.env.VITE_API_BASE_URL ?? 'https://fedegg09-pampa-pilot-api.hf.space'
-).replace(/\/+$/, '');
-
-type SafeRequestInit = Omit<RequestInit, 'body' | 'headers'> & {
-  headers?: HeadersInit;
-  body?: BodyInit | null;
-};
+const BASE_URL = (import.meta.env.VITE_API_BASE_URL ?? 'https://fedegg09-pampa-pilot-api.hf.space').replace(/\/+$/, '')
 
 async function request<TResponse>(
   path: string,
-  init: SafeRequestInit = {},
+  init: RequestInit = {},
 ): Promise<TResponse> {
-  const controller = new AbortController();
-  const timeout = globalThis.setTimeout(() => controller.abort(), 45_000);
+  const controller = new AbortController()
+  const timeout = globalThis.setTimeout(() => controller.abort(), 45_000)
 
   try {
-    const { headers, body, ...rest } = init;
-    const resolvedHeaders = new Headers(headers ?? {});
-
-    resolvedHeaders.set('Accept', 'application/json');
-    if (body !== undefined) {
-      resolvedHeaders.set('Content-Type', 'application/json');
-    }
+    const { headers, body, ...rest } = init
 
     const requestInit: RequestInit = {
       ...rest,
-      headers: resolvedHeaders,
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+        ...(headers ?? {}),
+      },
       signal: controller.signal,
-    };
-
-    if (body !== undefined) {
-      (requestInit as RequestInit & { body?: BodyInit | null }).body = body;
     }
 
-    const response = await fetch(`${BASE_URL}${path}`, requestInit);
+    if (body !== undefined) {
+      requestInit.body = body
+    }
 
-    const contentType = response.headers.get('content-type') ?? '';
+    const response = await fetch(`${BASE_URL}${path}`, requestInit)
+    const contentType = response.headers.get('content-type') ?? ''
     const payload = contentType.includes('application/json')
       ? await response.json().catch(() => null)
-      : await response.text().catch(() => null);
+      : await response.text().catch(() => null)
 
     if (!response.ok) {
       const message =
         typeof payload === 'object' && payload && 'detail' in payload
           ? String((payload as Record<string, unknown>).detail)
-          : `HTTP ${response.status}`;
+          : `HTTP ${response.status}`
 
-      throw new ApiError(message, response.status, payload);
+      throw new ApiError(message, response.status, payload)
     }
 
-    return payload as TResponse;
+    return payload as TResponse
   } catch (error) {
-    if (error instanceof ApiError) throw error;
+    if (error instanceof ApiError) throw error
 
     if (error instanceof DOMException && error.name === 'AbortError') {
-      throw new ApiError('La solicitud superó el tiempo de espera.', 408);
+      throw new ApiError('La solicitud superó el tiempo de espera.', 408)
     }
 
-    const message = error instanceof Error ? error.message : 'Error inesperado';
-    throw new ApiError(message, undefined, error);
+    const message = error instanceof Error ? error.message : 'Error inesperado'
+    throw new ApiError(message, undefined, error)
   } finally {
-    globalThis.clearTimeout(timeout);
+    globalThis.clearTimeout(timeout)
   }
 }
 
 export function getApiBaseUrl(): string {
-  return BASE_URL;
+  return BASE_URL
 }
 
 export function isApiError(error: unknown): error is ApiError {
-  return error instanceof ApiError;
+  return error instanceof ApiError
 }
 
 export const apiClient = {
   get<TResponse>(path: string, init?: RequestInit) {
-    return request<TResponse>(path, { ...init, method: 'GET' });
+    return request<TResponse>(path, { ...init, method: 'GET' })
   },
 
-  post<TResponse, TBody extends Record<string, unknown> = Record<string, unknown>>(
+  post<TResponse, TBody = unknown>(
     path: string,
     body: TBody,
     init?: RequestInit,
@@ -107,10 +101,10 @@ export const apiClient = {
       ...init,
       method: 'POST',
       body: JSON.stringify(body),
-    });
+    })
   },
 
-  put<TResponse, TBody extends Record<string, unknown> = Record<string, unknown>>(
+  put<TResponse, TBody = unknown>(
     path: string,
     body: TBody,
     init?: RequestInit,
@@ -119,56 +113,90 @@ export const apiClient = {
       ...init,
       method: 'PUT',
       body: JSON.stringify(body),
-    });
+    })
   },
 
   del<TResponse>(path: string, init?: RequestInit) {
-    return request<TResponse>(path, { ...init, method: 'DELETE' });
+    return request<TResponse>(path, { ...init, method: 'DELETE' })
   },
-};
+}
 
-export async function fetchDashboardOverview(): Promise<DashboardOverviewResponse> {
-  return request<DashboardOverviewResponse>('/dashboard/overview', {
+/* Endpoints existentes */
+
+export async function fetchDashboardOverview(): Promise<unknown> {
+  return request('/dashboard/overview', {
     method: 'GET',
-  });
+  })
 }
 
 export async function diagnoseDtc(
   input: DtcDiagnosisRequest,
 ): Promise<DtcDiagnosisResponse> {
-  return request<DtcDiagnosisResponse>('/dtc/diagnose', {
+  return request('/dtc/diagnose', {
     method: 'POST',
     body: JSON.stringify(input),
-  });
+  })
 }
 
 export async function simulateFinance(
   input: FinanceSimulationRequest,
 ): Promise<FinanceSimulationResponse> {
-  return request<FinanceSimulationResponse>('/finance/simulate', {
+  return request('/finance/simulate', {
     method: 'POST',
     body: JSON.stringify(input),
-  });
+  })
 }
 
 export async function analyzeOrchestrator(
   input: OrchestratorAnalyzeRequest,
 ): Promise<OrchestratorAnalyzeResponse> {
-  return request<OrchestratorAnalyzeResponse>('/orchestrator/analyze', {
+  return request('/orchestrator/analyze', {
     method: 'POST',
     body: JSON.stringify(input),
-  });
+  })
 }
 
-export type AgronomistChatResponse = {
-  reply: string;
-};
+/* Chat legacy agrónomo */
 
 export async function sendAgronomistChat(
   message: string,
 ): Promise<AgronomistChatResponse> {
-  return request<AgronomistChatResponse>('/agronomist/chat', {
+  return request('/agronomist/chat', {
     method: 'POST',
     body: JSON.stringify({ message }),
-  });
+  })
+}
+
+/* Chat supervisor / multiagente */
+
+export async function sendSupervisorChat(
+  input: SupervisorChatRequest,
+): Promise<SupervisorChatResponse> {
+  return request('/chat', {
+    method: 'POST',
+    body: JSON.stringify(input),
+  })
+}
+
+export async function fetchChatConversations(
+  userId: string,
+  query?: string,
+): Promise<ConversationSearchResponse> {
+  const params = new URLSearchParams()
+  params.set('user_id', userId)
+  if (query?.trim()) {
+    params.set('query', query.trim())
+  }
+
+  return request(`/chat/search?${params.toString()}`, {
+    method: 'GET',
+  })
+}
+
+export async function fetchChatConversation(
+  threadId: string,
+): Promise<ConversationDetailResponse> {
+  return request(`/chat/${encodeURIComponent(threadId)}`, {
+    method: 'GET',
+  })
 }
