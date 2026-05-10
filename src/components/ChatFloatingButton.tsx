@@ -1,6 +1,5 @@
 import { AnimatePresence, motion } from 'framer-motion'
 import {
-  BadgeDollarSign,
   Bot,
   Calculator,
   ChevronLeft,
@@ -26,6 +25,10 @@ import {
   type KeyboardEvent,
 } from 'react'
 
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { ScrollArea } from '@/components/ui/scroll-area'
+import { Separator } from '@/components/ui/separator'
 import {
   fetchChatConversation,
   fetchChatConversations,
@@ -71,7 +74,8 @@ const AGENT_META: Record<AgentKey, AgentMeta> = {
     label: 'Agrónomo',
     subtitle: 'Suelos, cultivos y sanidad',
     icon: Leaf,
-    greeting: '¡Hola! Soy tu asistente Agrónomo 🌱\n¿En qué puedo ayudarte hoy con tus cultivos o suelos?',
+    greeting:
+      '¡Hola! Soy tu asistente Agrónomo 🌱\n¿En qué puedo ayudarte hoy con tus cultivos o suelos?',
     promptPills: [
       'Plan específico',
       'Suelos arenosos',
@@ -87,13 +91,9 @@ const AGENT_META: Record<AgentKey, AgentMeta> = {
     label: 'Finanzas',
     subtitle: 'Costos, márgenes y análisis',
     icon: Calculator,
-    greeting: '¡Hola! Soy tu asistente de Finanzas 💼\n¿Querés revisar costos, márgenes o un escenario económico?',
-    promptPills: [
-      'Costo por ha',
-      'Margen bruto',
-      'Escenario dólar',
-      'Sensibilidad precio',
-    ],
+    greeting:
+      '¡Hola! Soy tu asistente de Finanzas 💼\n¿Querés revisar costos, márgenes o un escenario económico?',
+    promptPills: ['Costo por ha', 'Margen bruto', 'Escenario dólar', 'Sensibilidad precio'],
     accent: 'from-sky-100 to-cyan-100',
     ring: 'ring-sky-300/50',
     badge: 'bg-sky-50 text-sky-700 border-sky-200',
@@ -103,13 +103,9 @@ const AGENT_META: Record<AgentKey, AgentMeta> = {
     label: 'Maquinaria',
     subtitle: 'Operación, mantenimiento y telemetría',
     icon: Wrench,
-    greeting: '¡Hola! Soy tu asistente de Maquinaria ⚙️\n¿Querés optimizar operación, consumo o mantenimiento?',
-    promptPills: [
-      'Mantenimiento',
-      'Consumo por ha',
-      'Calibración',
-      'Telemetría',
-    ],
+    greeting:
+      '¡Hola! Soy tu asistente de Maquinaria ⚙️\n¿Querés optimizar operación, consumo o mantenimiento?',
+    promptPills: ['Mantenimiento', 'Consumo por ha', 'Calibración', 'Telemetría'],
     accent: 'from-amber-100 to-orange-100',
     ring: 'ring-amber-300/50',
     badge: 'bg-amber-50 text-amber-700 border-amber-200',
@@ -119,13 +115,9 @@ const AGENT_META: Record<AgentKey, AgentMeta> = {
     label: 'Gente y Legal',
     subtitle: 'Laboral, legal y cumplimiento',
     icon: Scale,
-    greeting: '¡Hola! Soy tu asistente de Gente y Legal 🧾\n¿Necesitás ordenar un tema laboral, documental o de cumplimiento?',
-    promptPills: [
-      'Contrato',
-      'Licencia',
-      'Confidencialidad',
-      'Cumplimiento',
-    ],
+    greeting:
+      '¡Hola! Soy tu asistente de Gente y Legal 🧾\n¿Necesitás ordenar un tema laboral, documental o de cumplimiento?',
+    promptPills: ['Contrato', 'Licencia', 'Confidencialidad', 'Cumplimiento'],
     accent: 'from-violet-100 to-fuchsia-100',
     ring: 'ring-violet-300/50',
     badge: 'bg-violet-50 text-violet-700 border-violet-200',
@@ -194,10 +186,7 @@ function conversationPreview(item: ConversationItem): string {
   return text.length > 92 ? `${text.slice(0, 92).trim()}…` : text
 }
 
-function messageToBubble(
-  message: ChatMessage,
-  agent: AgentKey,
-): UiBubble {
+function messageToBubble(message: ChatMessage, agent: AgentKey): UiBubble {
   return {
     id: createId(),
     role: normalizeRole(message.role),
@@ -207,9 +196,7 @@ function messageToBubble(
   }
 }
 
-function assistantBubbleFromResponse(
-  response: SupervisorChatResponse,
-): UiBubble {
+function assistantBubbleFromResponse(response: SupervisorChatResponse): UiBubble {
   return {
     id: createId(),
     role: 'assistant',
@@ -265,11 +252,7 @@ function EmptyConversationState({
   )
 }
 
-function MessageBubble({
-  bubble,
-}: {
-  bubble: UiBubble
-}) {
+function MessageBubble({ bubble }: { bubble: UiBubble }) {
   const isUser = bubble.role === 'user'
   const meta = AGENT_META[bubble.agent]
 
@@ -349,7 +332,7 @@ export default function ChatFloatingButton() {
   const inputRef = useRef<HTMLInputElement | null>(null)
   const messagesEndRef = useRef<HTMLDivElement | null>(null)
 
-  const currentAgent = AGENT_META[activeAgent]
+  const currentAgent: AgentMeta = AGENT_META[activeAgent]
 
   const filteredConversations = useMemo(
     () => conversations.filter((item) => item.agent === activeAgent),
@@ -395,32 +378,31 @@ export default function ChatFloatingButton() {
     [searchQuery, userId],
   )
 
-  const loadThread = useCallback(
-    async (threadId: string) => {
-      setLoadingThread(true)
-      setError(null)
+  const loadThread = useCallback(async (threadId: string) => {
+    setLoadingThread(true)
+    setError(null)
 
-      try {
-        const detail: ConversationDetailResponse = await fetchChatConversation(threadId)
-        const agent = (detail.agent || activeAgent) as AgentKey
-        setActiveAgent(agent)
-        setActiveThreadId(detail.thread_id)
-        setConversationTitle(detail.title || currentAgent.label)
+    try {
+      const detail: ConversationDetailResponse = await fetchChatConversation(threadId)
+      const agent = (detail.agent || activeAgent) as AgentKey
+      const agentMeta = AGENT_META[agent] ?? AGENT_META.agronomist
 
-        const nextMessages = (detail.messages || [])
-          .filter((item) => item.role === 'user' || item.role === 'assistant')
-          .map((item) => messageToBubble(item, agent))
+      setActiveAgent(agent)
+      setActiveThreadId(detail.thread_id)
+      setConversationTitle(detail.title || agentMeta.label)
 
-        setMessages(nextMessages)
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'No se pudo abrir la conversación.')
-        setMessages([])
-      } finally {
-        setLoadingThread(false)
-      }
-    },
-    [activeAgent, currentAgent.label],
-  )
+      const nextMessages = (detail.messages || [])
+        .filter((item) => item.role === 'user' || item.role === 'assistant')
+        .map((item) => messageToBubble(item, agent))
+
+      setMessages(nextMessages)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'No se pudo abrir la conversación.')
+      setMessages([])
+    } finally {
+      setLoadingThread(false)
+    }
+  }, [activeAgent])
 
   const handlePickConversation = useCallback(
     async (item: ConversationItem) => {
@@ -561,14 +543,14 @@ export default function ChatFloatingButton() {
   useEffect(() => {
     if (!open) return
 
-    const onKeyDown = (event: KeyboardEvent<Document>) => {
+    const onKeyDown = (event: globalThis.KeyboardEvent) => {
       if (event.key === 'Escape') {
         setOpen(false)
       }
     }
 
-    document.addEventListener('keydown', onKeyDown as unknown as EventListener)
-    return () => document.removeEventListener('keydown', onKeyDown as unknown as EventListener)
+    document.addEventListener('keydown', onKeyDown)
+    return () => document.removeEventListener('keydown', onKeyDown)
   }, [open])
 
   return (
@@ -625,7 +607,9 @@ export default function ChatFloatingButton() {
                         <Search className="h-4 w-4 text-stone-400" />
                         <Input
                           value={searchQuery}
-                          onChange={(event) => setSearchQuery(event.target.value)}
+                          onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
+                            setSearchQuery(event.target.value)
+                          }
                           placeholder="Buscar conversaciones..."
                           className="h-auto border-0 bg-transparent p-0 text-sm shadow-none placeholder:text-stone-400 focus-visible:ring-0"
                         />
@@ -771,13 +755,16 @@ export default function ChatFloatingButton() {
                     <p className="mt-1 truncate text-lg font-semibold text-stone-900">
                       {conversationTitle || currentAgent.label}
                     </p>
-                    <p className="mt-1 text-sm text-stone-500">
-                      {currentAgent.subtitle}
-                    </p>
+                    <p className="mt-1 text-sm text-stone-500">{currentAgent.subtitle}</p>
                   </div>
 
                   <div className="flex items-center gap-2">
-                    <span className={cn('hidden rounded-full border px-3 py-1 text-xs font-medium sm:inline-flex', currentAgent.badge)}>
+                    <span
+                      className={cn(
+                        'hidden rounded-full border px-3 py-1 text-xs font-medium sm:inline-flex',
+                        currentAgent.badge,
+                      )}
+                    >
                       {activeThreadId ? 'Conversación activa' : 'Nueva conversación'}
                     </span>
 
@@ -829,9 +816,7 @@ export default function ChatFloatingButton() {
                               <p className="truncate text-sm font-semibold text-stone-900">
                                 {agent.label}
                               </p>
-                              <p className="truncate text-[12px] text-stone-500">
-                                {agent.subtitle}
-                              </p>
+                              <p className="truncate text-[12px] text-stone-500">{agent.subtitle}</p>
                             </div>
                           </button>
                         )
@@ -927,7 +912,9 @@ export default function ChatFloatingButton() {
                         <Input
                           ref={inputRef}
                           value={input}
-                          onChange={(event) => setInput(event.target.value)}
+                          onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
+                            setInput(event.target.value)
+                          }
                           onKeyDown={handleKeyDown}
                           placeholder="Escribí tu mensaje..."
                           className="h-12 flex-1 border-0 bg-transparent px-2 text-[15px] shadow-none placeholder:text-stone-400 focus-visible:ring-0"

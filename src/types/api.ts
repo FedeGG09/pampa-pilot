@@ -1,6 +1,8 @@
 export type Severity = 'low' | 'medium' | 'high' | 'critical'
 export type CropType = 'soja' | 'maiz' | 'trigo' | 'girasol' | 'algodon' | 'other'
+
 export type ChatAgentType = 'agronomist' | 'finance' | 'machinery' | 'people_legal'
+export type AgentKey = ChatAgentType
 
 export interface DtcDiagnosisRequest {
   code: string
@@ -90,7 +92,42 @@ export interface AgronomistChatResponse {
   reply: string
 }
 
-/* Nuevo chat supervisor / memoria / multiagente */
+/* ===== Dashboard / Home ===== */
+
+export interface DashboardKpi {
+  id: string
+  label: string
+  value: number | string
+  delta?: number
+  trend?: 'up' | 'down' | 'flat'
+  subtitle?: string
+  unit?: string
+  icon?: string
+  color?: string
+}
+
+export interface LotSummary {
+  id: string
+  name: string
+  crop: CropType
+  ndvi: number
+  areaHa: number
+  lat?: number
+  lng?: number
+  status?: string
+  updatedAt?: string
+}
+
+export interface DashboardOverviewResponse {
+  title?: string
+  subtitle?: string
+  kpis: DashboardKpi[]
+  lots: LotSummary[]
+  alerts: AppLogEntry[]
+  generatedAt?: string
+}
+
+/* ===== Multiagent chat ===== */
 
 export interface ChatMessage {
   role: 'user' | 'assistant' | 'system'
