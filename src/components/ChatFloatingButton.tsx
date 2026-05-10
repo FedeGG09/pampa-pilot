@@ -22,6 +22,7 @@ import {
   useMemo,
   useRef,
   useState,
+  type ChangeEvent,
   type KeyboardEvent,
 } from 'react'
 
@@ -38,8 +39,8 @@ import { cn } from '@/lib/utils'
 import type {
   AgentKey,
   ChatMessage,
-  ConversationItem,
   ConversationDetailResponse,
+  ConversationItem,
   SupervisorChatResponse,
 } from '@/types/api'
 
@@ -125,7 +126,6 @@ const AGENT_META: Record<AgentKey, AgentMeta> = {
 }
 
 const AGENT_ORDER: AgentKey[] = ['agronomist', 'finance', 'machinery', 'people_legal']
-
 const USER_ID_KEY = 'pampa-pilot.chat.user-id'
 
 function createId(): string {
@@ -196,6 +196,10 @@ function messageToBubble(message: ChatMessage, agent: AgentKey): UiBubble {
   }
 }
 
+function getAgentMeta(agent: AgentKey): AgentMeta {
+  return AGENT_META[agent] ?? AGENT_META.agronomist
+}
+
 function assistantBubbleFromResponse(response: SupervisorChatResponse): UiBubble {
   return {
     id: createId(),
@@ -254,7 +258,7 @@ function EmptyConversationState({
 
 function MessageBubble({ bubble }: { bubble: UiBubble }) {
   const isUser = bubble.role === 'user'
-  const meta = AGENT_META[bubble.agent]
+  const meta = getAgentMeta(bubble.agent)
 
   return (
     <div className={cn('flex w-full gap-3', isUser ? 'justify-end' : 'justify-start')}>
@@ -332,7 +336,7 @@ export default function ChatFloatingButton() {
   const inputRef = useRef<HTMLInputElement | null>(null)
   const messagesEndRef = useRef<HTMLDivElement | null>(null)
 
-  const currentAgent: AgentMeta = AGENT_META[activeAgent]
+  const currentAgent = getAgentMeta(activeAgent)
 
   const filteredConversations = useMemo(
     () => conversations.filter((item) => item.agent === activeAgent),
@@ -378,31 +382,34 @@ export default function ChatFloatingButton() {
     [searchQuery, userId],
   )
 
-  const loadThread = useCallback(async (threadId: string) => {
-    setLoadingThread(true)
-    setError(null)
+  const loadThread = useCallback(
+    async (threadId: string) => {
+      setLoadingThread(true)
+      setError(null)
 
-    try {
-      const detail: ConversationDetailResponse = await fetchChatConversation(threadId)
-      const agent = (detail.agent || activeAgent) as AgentKey
-      const agentMeta = AGENT_META[agent] ?? AGENT_META.agronomist
+      try {
+        const detail: ConversationDetailResponse = await fetchChatConversation(threadId)
+        const agent = (detail.agent || activeAgent) as AgentKey
+        const agentMeta = getAgentMeta(agent)
 
-      setActiveAgent(agent)
-      setActiveThreadId(detail.thread_id)
-      setConversationTitle(detail.title || agentMeta.label)
+        setActiveAgent(agent)
+        setActiveThreadId(detail.thread_id)
+        setConversationTitle(detail.title || agentMeta.label)
 
-      const nextMessages = (detail.messages || [])
-        .filter((item) => item.role === 'user' || item.role === 'assistant')
-        .map((item) => messageToBubble(item, agent))
+        const nextMessages = (detail.messages || [])
+          .filter((item) => item.role === 'user' || item.role === 'assistant')
+          .map((item) => messageToBubble(item, agent))
 
-      setMessages(nextMessages)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'No se pudo abrir la conversación.')
-      setMessages([])
-    } finally {
-      setLoadingThread(false)
-    }
-  }, [activeAgent])
+        setMessages(nextMessages)
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'No se pudo abrir la conversación.')
+        setMessages([])
+      } finally {
+        setLoadingThread(false)
+      }
+    },
+    [activeAgent],
+  )
 
   const handlePickConversation = useCallback(
     async (item: ConversationItem) => {
@@ -476,7 +483,7 @@ export default function ChatFloatingButton() {
 
       setActiveThreadId(response.thread_id)
       setActiveAgent(response.agent)
-      setConversationTitle(response.conversation_title || AGENT_META[response.agent].label)
+      setConversationTitle(response.conversation_title || getAgentMeta(response.agent).label)
 
       const assistantBubble = assistantBubbleFromResponse(response)
       setMessages((prev) => [...prev, assistantBubble])
@@ -607,7 +614,7 @@ export default function ChatFloatingButton() {
                         <Search className="h-4 w-4 text-stone-400" />
                         <Input
                           value={searchQuery}
-                          onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
+                          onChange={(event: ChangeEvent<HTMLInputElement>) =>
                             setSearchQuery(event.target.value)
                           }
                           placeholder="Buscar conversaciones..."
@@ -713,7 +720,7 @@ export default function ChatFloatingButton() {
                   <div className="flex flex-1 flex-col items-center gap-3 px-3 pb-4">
                     <div className="grid w-full grid-cols-1 gap-2">
                       {AGENT_ORDER.map((agentKey) => {
-                        const agent = AGENT_META[agentKey]
+                        const agent = getAgentMeta(agentKey)
                         const active = activeAgent === agentKey
                         const Icon = agent.icon
                         return (
@@ -785,7 +792,7 @@ export default function ChatFloatingButton() {
                   <div className="border-b border-stone-200/80 px-5 py-4 sm:px-6">
                     <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
                       {AGENT_ORDER.map((agentKey) => {
-                        const agent = AGENT_META[agentKey]
+                        const agent = getAgentMeta(agentKey)
                         const active = activeAgent === agentKey
                         const Icon = agent.icon
 
@@ -912,7 +919,7 @@ export default function ChatFloatingButton() {
                         <Input
                           ref={inputRef}
                           value={input}
-                          onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
+                          onChange={(event: ChangeEvent<HTMLInputElement>) =>
                             setInput(event.target.value)
                           }
                           onKeyDown={handleKeyDown}
