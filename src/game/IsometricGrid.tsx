@@ -848,7 +848,7 @@ const Tile = memo(function Tile({
       )}
 
       {f && (
-        <div className="pointer-events-none absolute left-1/2 -top-2 -translate-x-1/2 z-10">
+        <div className="pointer-events-none absolute left-1/2 -top-2 -translate-x-1/2 z-10 flex flex-col items-center gap-0.5">
           <span
             className={`rounded-full px-2 py-0.5 text-[10px] font-bold backdrop-blur ${
               rot > 0 ? "bg-destructive/80 text-white" : "bg-black/60 text-white"
@@ -858,6 +858,11 @@ const Tile = memo(function Tile({
             {f.name} · {f.stock}
             {rot > 0 ? " 💀" : ""}
           </span>
+          {disconnected && (
+            <span className="flex items-center gap-1 rounded-full bg-destructive/90 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wider text-white shadow-lg">
+              <AlertOctagon size={10} /> Sin ruta
+            </span>
+          )}
         </div>
       )}
 
