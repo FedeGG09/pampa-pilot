@@ -486,6 +486,7 @@ export function IsometricGrid({ onSelect, selectedId }: { onSelect: (f: Finca) =
             const isHover = !!(f && hoverTile === f.id);
             const rot = f ? rotPct(f.stock, capacidad) : 0;
             const showWaterDrip = !!(f && state.tech.riego && (f.type === "vid" || f.type === "olivo"));
+            const disconnected = !!(f && !isFincaConnected(f.x, f.y, state.terrain));
 
             return (
               <Tile
@@ -502,8 +503,9 @@ export function IsometricGrid({ onSelect, selectedId }: { onSelect: (f: Finca) =
                 shake={invalidFlash === f?.id}
                 showWaterDrip={showWaterDrip}
                 hasTank={!!(f && state.tech.riego)}
-                tractorCount={f && harvest ? tractorsPerFinca : 0}
+                tractorCount={f && harvest && !disconnected ? tractorsPerFinca : 0}
                 hasDrones={!!(f && state.tech.drones)}
+                disconnected={disconnected}
                 onSelect={onSelect}
               />
             );
