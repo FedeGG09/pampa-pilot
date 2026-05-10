@@ -1,7 +1,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { memo, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { useGame, parcelCost, MAP_SIZE, MAP_CENTER, type Finca, type FactoryType, type Terrain } from "./GameContext";
-import { ZoomIn, ZoomOut, Maximize2, Move, Lock } from "lucide-react";
+import { useGame, parcelCost, isFincaConnected, MAP_SIZE, MAP_CENTER, type Finca, type FactoryType, type Terrain } from "./GameContext";
+import { ZoomIn, ZoomOut, Maximize2, Move, Lock, AlertOctagon } from "lucide-react";
 import tileVid from "@/assets/tile-vid.png";
 import tileOlivo from "@/assets/tile-olivo.png";
 import tileNogal from "@/assets/tile-nogal.png";
@@ -42,16 +42,126 @@ const BOARD_W = GRID * TILE_W + 200;
 const BOARD_H = GRID * TILE_H + 280;
 const WAREHOUSE_GRID = { x: MAP_CENTER, y: MAP_CENTER };
 
-const TERRAIN_EMOJI: Record<Terrain, string> = {
-  mountain: "⛰️",
-  river: "🌊",
-  rocks: "🪨",
-};
 const TERRAIN_LABEL: Record<Terrain, string> = {
-  mountain: "Cerro (no construible)",
-  river: "Arroyo seco (requiere puente)",
-  rocks: "Pedregal (requiere limpieza)",
+  mountain: "Cerro (no construible · bloquea caminos)",
+  river: "Arroyo seco (requiere puente · bloquea caminos)",
+  rocks: "Pedregal (requiere limpieza vía I+D)",
 };
+
+// ─── Tiles texturizados (sin emojis) ───────────────────────────
+function TerrainTile({ kind }: { kind: Terrain }) {
+  if (kind === "mountain") {
+    return (
+      <div
+        className="pointer-events-none absolute"
+        style={{ left: TILE_W * 0.05, top: -TILE_H * 0.55, width: TILE_W * 0.9, height: TILE_H * 2 }}
+      >
+        {/* base isométrica */}
+        <div
+          className="absolute"
+          style={{
+            left: 0, bottom: 0, width: TILE_W * 0.9, height: TILE_H * 0.9,
+            transform: "rotateX(60deg) rotateZ(45deg)",
+            background: "linear-gradient(135deg, oklch(0.32 0.04 60), oklch(0.22 0.03 50))",
+            borderRadius: 4,
+            boxShadow: "inset 0 1px 0 oklch(1 0 0 / 0.06)",
+          }}
+        />
+        {/* cerro principal */}
+        <svg
+          viewBox="0 0 100 100"
+          className="absolute"
+          style={{ left: TILE_W * 0.05, top: 0, width: TILE_W * 0.8, height: TILE_H * 1.7, filter: "drop-shadow(0 8px 10px rgba(0,0,0,0.65))" }}
+        >
+          <defs>
+            <linearGradient id="mtnFace" x1="0" y1="0" x2="0.6" y2="1">
+              <stop offset="0%" stopColor="#a8916b" />
+              <stop offset="55%" stopColor="#7a6649" />
+              <stop offset="100%" stopColor="#3d3325" />
+            </linearGradient>
+            <linearGradient id="mtnShade" x1="0" y1="0" x2="1" y2="0.8">
+              <stop offset="0%" stopColor="#2a2316" />
+              <stop offset="100%" stopColor="#5a4a33" />
+            </linearGradient>
+          </defs>
+          {/* cara izquierda (luz) */}
+          <polygon points="50,10 12,90 50,75" fill="url(#mtnFace)" />
+          {/* cara derecha (sombra) */}
+          <polygon points="50,10 88,90 50,75" fill="url(#mtnShade)" />
+          {/* cumbre nevada */}
+          <polygon points="50,10 42,28 50,24 58,28" fill="#e8e2d2" opacity="0.85" />
+          <polygon points="50,24 46,33 50,31 54,33" fill="#fff" opacity="0.7" />
+          {/* estrías de roca */}
+          <path d="M30,70 L40,55 M55,72 L65,55 M70,80 L60,65" stroke="#2a2316" strokeWidth="1.2" fill="none" opacity="0.4" />
+        </svg>
+      </div>
+    );
+  }
+  if (kind === "river") {
+    return (
+      <div
+        className="pointer-events-none absolute"
+        style={{ left: TILE_W * 0.05, top: TILE_H * 0.45, width: TILE_W * 0.9, height: TILE_H * 0.9 }}
+      >
+        <div
+          className="absolute inset-0"
+          style={{
+            transform: "rotateX(60deg) rotateZ(45deg)",
+            background:
+              "linear-gradient(135deg, oklch(0.55 0.1 220), oklch(0.42 0.12 230) 60%, oklch(0.32 0.1 235))",
+            borderRadius: 6,
+            boxShadow: "inset 0 0 12px oklch(0.18 0.05 240 / 0.7), 0 4px 8px rgba(0,0,0,0.5)",
+            overflow: "hidden",
+          }}
+        >
+          {/* ondas */}
+          <div
+            className="absolute inset-0 opacity-70"
+            style={{
+              background:
+                "repeating-linear-gradient(90deg, transparent 0 6px, oklch(0.85 0.08 220 / 0.5) 6px 8px, transparent 8px 14px)",
+              animation: "riverFlow 6s linear infinite",
+            }}
+          />
+          {/* brillo */}
+          <div
+            className="absolute inset-x-2 top-1 h-1 rounded-full"
+            style={{ background: "oklch(0.95 0.05 220 / 0.6)", filter: "blur(1px)" }}
+          />
+        </div>
+      </div>
+    );
+  }
+  // rocks
+  return (
+    <div
+      className="pointer-events-none absolute"
+      style={{ left: TILE_W * 0.1, top: TILE_H * 0.4, width: TILE_W * 0.8, height: TILE_H * 1.1 }}
+    >
+      <div
+        className="absolute inset-0"
+        style={{
+          transform: "rotateX(60deg) rotateZ(45deg)",
+          background: "linear-gradient(135deg, oklch(0.4 0.02 60), oklch(0.3 0.02 50))",
+          borderRadius: 4,
+          opacity: 0.7,
+        }}
+      />
+      <svg viewBox="0 0 100 60" className="absolute inset-0" style={{ filter: "drop-shadow(0 4px 4px rgba(0,0,0,0.55))" }}>
+        <defs>
+          <radialGradient id="rockG" cx="0.4" cy="0.3" r="0.7">
+            <stop offset="0%" stopColor="#9a8b75" />
+            <stop offset="100%" stopColor="#3d3528" />
+          </radialGradient>
+        </defs>
+        <ellipse cx="35" cy="38" rx="22" ry="13" fill="url(#rockG)" />
+        <ellipse cx="65" cy="34" rx="18" ry="11" fill="url(#rockG)" />
+        <ellipse cx="50" cy="46" rx="14" ry="8" fill="url(#rockG)" opacity="0.85" />
+        <ellipse cx="78" cy="42" rx="9" ry="6" fill="url(#rockG)" opacity="0.7" />
+      </svg>
+    </div>
+  );
+}
 
 function isoPos(x: number, y: number) {
   return {
