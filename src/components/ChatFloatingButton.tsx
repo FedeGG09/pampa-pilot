@@ -569,13 +569,13 @@ export default function ChatFloatingButton() {
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.98, y: 18 }}
             transition={{ duration: 0.18 }}
-            className="fixed inset-0 z-[80] flex items-end justify-end bg-black/10 p-2 backdrop-blur-[2px] sm:p-4"
+            className="fixed inset-0 z-[80] flex items-center justify-center bg-black/10 p-2 backdrop-blur-[2px] sm:p-4"
           >
-            <div className="relative flex h-[calc(100vh-16px)] w-full overflow-hidden rounded-[32px] border border-white/70 bg-white/90 shadow-[0_30px_100px_-30px_rgba(12,20,12,0.35)] backdrop-blur-2xl sm:h-[min(860px,calc(100vh-24px))] sm:w-[min(1280px,calc(100vw-24px))]">
+            <div className="relative flex h-[calc(100vh-16px)] w-[calc(100vw-16px)] overflow-hidden rounded-[32px] border border-white/70 bg-white/90 shadow-[0_30px_100px_-30px_rgba(12,20,12,0.35)] backdrop-blur-2xl sm:h-[min(920px,calc(100vh-24px))] sm:w-[min(1520px,calc(100vw-24px))] lg:w-[min(1560px,calc(100vw-24px))]">
               <aside
                 className={cn(
                   'flex h-full shrink-0 flex-col border-r border-stone-200/80 bg-gradient-to-b from-stone-50 to-white transition-all duration-300',
-                  sidebarCollapsed ? 'w-[96px]' : 'w-[340px]',
+                  sidebarCollapsed ? 'w-[88px] lg:w-[96px]' : 'w-[300px] lg:w-[340px] xl:w-[360px]',
                 )}
               >
                 <div className="flex items-center justify-between gap-3 px-4 py-4">
@@ -832,7 +832,7 @@ export default function ChatFloatingButton() {
                   </div>
 
                   <ScrollArea className="flex-1">
-                    <div className="mx-auto flex w-full max-w-4xl flex-col gap-4 px-4 py-5 sm:px-6 lg:px-8">
+                    <div className="mx-auto flex w-full max-w-5xl flex-col gap-4 px-4 py-5 sm:px-6 lg:px-8">
                       {error && (
                         <div className="rounded-[20px] border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
                           {error}
@@ -885,7 +885,7 @@ export default function ChatFloatingButton() {
                   </ScrollArea>
 
                   <div className="border-t border-stone-200/80 bg-white/85 px-4 py-4 backdrop-blur-sm sm:px-6">
-                    <div className="mx-auto flex w-full max-w-4xl flex-col gap-3">
+                    <div className="mx-auto flex w-full max-w-5xl flex-col gap-3">
                       <div className="flex flex-wrap gap-2">
                         {currentAgent.promptPills.map((pill) => (
                           <button
