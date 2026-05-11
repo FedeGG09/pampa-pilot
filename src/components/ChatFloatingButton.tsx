@@ -223,7 +223,7 @@ function EmptyConversationState({
   onPrompt: (value: string) => void
 }) {
   return (
-    <div className="flex min-h-[420px] flex-1 flex-col items-center justify-center px-6 py-8 text-center">
+    <div className="flex min-h-0 flex-1 flex-col items-center justify-center px-6 py-8 text-center">
       <div className="mb-5 flex h-16 w-16 items-center justify-center rounded-full border border-lime-200 bg-lime-50 text-lime-700 shadow-sm">
         <agent.icon className="h-8 w-8" />
       </div>
@@ -565,383 +565,338 @@ export default function ChatFloatingButton() {
       <AnimatePresence>
         {open && (
           <motion.div
-            initial={{ opacity: 0, scale: 0.98, y: 18 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.98, y: 18 }}
+            initial={{ opacity: 0, scale: 0.98 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.98 }}
             transition={{ duration: 0.18 }}
-            className="fixed inset-0 z-[80] flex items-center justify-center bg-black/10 p-2 backdrop-blur-[2px] sm:p-4"
+            className="fixed inset-0 z-[80] bg-white"
           >
-            <div className="relative flex h-[calc(100vh-16px)] w-[calc(100vw-16px)] overflow-hidden rounded-[32px] border border-white/70 bg-white/90 shadow-[0_30px_100px_-30px_rgba(12,20,12,0.35)] backdrop-blur-2xl sm:h-[min(920px,calc(100vh-24px))] sm:w-[min(1520px,calc(100vw-24px))] lg:w-[min(1560px,calc(100vw-24px))]">
-              <aside
-                className={cn(
-                  'flex h-full shrink-0 flex-col border-r border-stone-200/80 bg-gradient-to-b from-stone-50 to-white transition-all duration-300',
-                  sidebarCollapsed ? 'w-[88px] lg:w-[96px]' : 'w-[300px] lg:w-[340px] xl:w-[360px]',
-                )}
-              >
-                <div className="flex items-center justify-between gap-3 px-4 py-4">
-                  {!sidebarCollapsed ? (
-                    <div>
-                      <h2 className="text-[22px] font-semibold tracking-tight text-stone-900">
-                        Conversaciones
-                      </h2>
-                    </div>
-                  ) : (
-                    <div className="flex h-10 w-10 items-center justify-center rounded-2xl border border-stone-200 bg-white text-stone-600 shadow-sm">
-                      <MessageCircle className="h-5 w-5" />
-                    </div>
-                  )}
+            <div className="flex h-screen w-screen flex-col overflow-hidden">
+              <header className="flex items-center justify-between border-b border-stone-200 bg-white px-5 py-4 shadow-sm">
+                <div className="min-w-0">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-stone-400">
+                    Agentes disponibles
+                  </p>
+                  <p className="truncate text-lg font-semibold text-stone-900">
+                    {conversationTitle || currentAgent.label}
+                  </p>
+                  <p className="truncate text-sm text-stone-500">{currentAgent.subtitle}</p>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <span
+                    className={cn(
+                      'hidden rounded-full border px-3 py-1 text-xs font-medium sm:inline-flex',
+                      currentAgent.badge,
+                    )}
+                  >
+                    {activeThreadId ? 'Conversación activa' : 'Nueva conversación'}
+                  </span>
 
                   <Button
                     type="button"
                     variant="ghost"
                     size="icon"
-                    onClick={() => setSidebarCollapsed((value) => !value)}
-                    className="rounded-2xl border border-stone-200 bg-white/80 text-stone-500 shadow-sm hover:bg-stone-50"
-                    aria-label={sidebarCollapsed ? 'Expandir conversaciones' : 'Contraer conversaciones'}
+                    onClick={() => setOpen(false)}
+                    className="rounded-2xl border border-stone-200 bg-white shadow-sm hover:bg-stone-50"
+                    aria-label="Cerrar chat"
                   >
-                    {sidebarCollapsed ? (
-                      <ChevronRight className="h-4 w-4" />
-                    ) : (
-                      <ChevronLeft className="h-4 w-4" />
-                    )}
+                    <X className="h-4 w-4" />
                   </Button>
                 </div>
+              </header>
 
-                {!sidebarCollapsed ? (
-                  <>
-                    <div className="px-4 pb-4">
-                      <div className="flex items-center gap-3 rounded-[22px] border border-stone-200 bg-white px-4 py-3 shadow-sm">
-                        <Search className="h-4 w-4 text-stone-400" />
-                        <Input
-                          value={searchQuery}
-                          onChange={(event: ChangeEvent<HTMLInputElement>) =>
-                            setSearchQuery(event.target.value)
-                          }
-                          placeholder="Buscar conversaciones..."
-                          className="h-auto border-0 bg-transparent p-0 text-sm shadow-none placeholder:text-stone-400 focus-visible:ring-0"
-                        />
+              <div className="grid min-h-0 flex-1 grid-cols-[320px_1fr]">
+                <aside className={cn('flex min-h-0 flex-col border-r border-stone-200 bg-stone-50', sidebarCollapsed && 'w-[88px]')}>
+                  <div className="flex items-center justify-between gap-3 border-b border-stone-200 px-4 py-4">
+                    {!sidebarCollapsed ? (
+                      <div>
+                        <h2 className="text-[22px] font-semibold tracking-tight text-stone-900">
+                          Conversaciones
+                        </h2>
                       </div>
-
-                      <div className="mt-4 rounded-[24px] border border-white bg-white/60 p-3 shadow-sm">
-                        <div className="mb-2 flex items-center justify-between">
-                          <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-stone-400">
-                            Conversaciones guardadas
-                          </span>
-                          {loadingList && (
-                            <span className="text-[11px] text-stone-400">Cargando…</span>
-                          )}
-                        </div>
-
-                        <ScrollArea className="h-[calc(100vh-430px)] pr-2 sm:h-[calc(100vh-440px)]">
-                          {groupedConversations.length === 0 ? (
-                            <div className="rounded-[20px] border border-dashed border-stone-200 bg-stone-50 px-4 py-5 text-sm text-stone-500">
-                              {searchQuery.trim()
-                                ? 'No encontré conversaciones con ese término.'
-                                : 'Todavía no hay conversaciones para este agente.'}
-                            </div>
-                          ) : (
-                            <div className="space-y-5">
-                              {groupedConversations.map((group) => (
-                                <div key={group.label} className="space-y-3">
-                                  <p className="px-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-stone-400">
-                                    {group.label}
-                                  </p>
-
-                                  <div className="space-y-2">
-                                    {group.items.map((item) => {
-                                      const active = item.thread_id === activeThreadId
-                                      return (
-                                        <button
-                                          key={item.thread_id}
-                                          type="button"
-                                          onClick={() => void handlePickConversation(item)}
-                                          className={cn(
-                                            'w-full rounded-[22px] border p-3 text-left transition',
-                                            active
-                                              ? 'border-lime-300 bg-lime-50/80 shadow-sm'
-                                              : 'border-stone-200 bg-white hover:border-lime-200 hover:bg-lime-50/40',
-                                          )}
-                                        >
-                                          <div className="flex items-start justify-between gap-3">
-                                            <div className="min-w-0">
-                                              <p className="truncate text-sm font-semibold text-stone-900">
-                                                {item.title || 'Conversación'}
-                                              </p>
-                                              <p className="mt-1 line-clamp-2 text-sm leading-6 text-stone-500">
-                                                {conversationPreview(item)}
-                                              </p>
-                                            </div>
-
-                                            <div className="flex shrink-0 flex-col items-end gap-2">
-                                              <span className="text-[11px] text-stone-400">
-                                                {item.updated_at
-                                                  ? new Intl.DateTimeFormat('es-AR', {
-                                                      day: '2-digit',
-                                                      month: 'short',
-                                                    }).format(new Date(item.updated_at))
-                                                  : ''}
-                                              </span>
-                                              <span
-                                                className={cn(
-                                                  'inline-flex items-center rounded-full px-2 py-1 text-[11px] font-medium',
-                                                  active
-                                                    ? 'bg-lime-100 text-lime-700'
-                                                    : 'bg-stone-100 text-stone-500',
-                                                )}
-                                              >
-                                                {active ? 'Activa' : `${item.turns} msgs`}
-                                              </span>
-                                            </div>
-                                          </div>
-                                        </button>
-                                      )
-                                    })}
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-                          )}
-                        </ScrollArea>
+                    ) : (
+                      <div className="flex h-10 w-10 items-center justify-center rounded-2xl border border-stone-200 bg-white text-stone-600 shadow-sm">
+                        <MessageCircle className="h-5 w-5" />
                       </div>
-                    </div>
-
-                    <div className="mt-auto px-4 pb-4">
-                      <Button
-                        type="button"
-                        onClick={handleNewConversation}
-                        className="h-14 w-full rounded-[22px] bg-lime-200 text-[15px] font-semibold text-lime-950 shadow-sm transition hover:bg-lime-300"
-                      >
-                        <Plus className="mr-2 h-4 w-4" />
-                        Nueva conversación
-                      </Button>
-                    </div>
-                  </>
-                ) : (
-                  <div className="flex flex-1 flex-col items-center gap-3 px-3 pb-4">
-                    <div className="grid w-full grid-cols-1 gap-2">
-                      {AGENT_ORDER.map((agentKey) => {
-                        const agent = getAgentMeta(agentKey)
-                        const active = activeAgent === agentKey
-                        const Icon = agent.icon
-                        return (
-                          <button
-                            key={agentKey}
-                            type="button"
-                            onClick={() => void handlePickAgent(agentKey)}
-                            className={cn(
-                              'flex h-16 w-full items-center justify-center rounded-[18px] border transition',
-                              active
-                                ? 'border-lime-300 bg-white shadow-sm ring-1 ring-lime-200'
-                                : 'border-stone-200 bg-white/80 hover:border-lime-200 hover:bg-lime-50/50',
-                            )}
-                            aria-label={agent.label}
-                          >
-                            <Icon className={cn('h-5 w-5', active ? 'text-lime-700' : 'text-stone-500')} />
-                          </button>
-                        )
-                      })}
-                    </div>
-
-                    <Button
-                      type="button"
-                      onClick={handleNewConversation}
-                      className="mt-auto h-12 w-full rounded-[18px] bg-lime-200 text-sm font-semibold text-lime-950 hover:bg-lime-300"
-                    >
-                      <Plus className="mr-2 h-4 w-4" />
-                    </Button>
-                  </div>
-                )}
-              </aside>
-
-              <section className="flex min-w-0 flex-1 flex-col bg-gradient-to-b from-white via-white to-stone-50/70">
-                <div className="flex items-center justify-between gap-4 border-b border-stone-200/80 px-5 py-4 sm:px-6">
-                  <div className="min-w-0">
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-stone-400">
-                      Agentes disponibles
-                    </p>
-                    <p className="mt-1 truncate text-lg font-semibold text-stone-900">
-                      {conversationTitle || currentAgent.label}
-                    </p>
-                    <p className="mt-1 text-sm text-stone-500">{currentAgent.subtitle}</p>
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <span
-                      className={cn(
-                        'hidden rounded-full border px-3 py-1 text-xs font-medium sm:inline-flex',
-                        currentAgent.badge,
-                      )}
-                    >
-                      {activeThreadId ? 'Conversación activa' : 'Nueva conversación'}
-                    </span>
+                    )}
 
                     <Button
                       type="button"
                       variant="ghost"
                       size="icon"
-                      onClick={() => setOpen(false)}
-                      className="rounded-2xl border border-stone-200 bg-white shadow-sm hover:bg-stone-50"
-                      aria-label="Cerrar chat"
+                      onClick={() => setSidebarCollapsed((value) => !value)}
+                      className="rounded-2xl border border-stone-200 bg-white/80 text-stone-500 shadow-sm hover:bg-stone-50"
+                      aria-label={sidebarCollapsed ? 'Expandir conversaciones' : 'Contraer conversaciones'}
                     >
-                      <X className="h-4 w-4" />
+                      {sidebarCollapsed ? (
+                        <ChevronRight className="h-4 w-4" />
+                      ) : (
+                        <ChevronLeft className="h-4 w-4" />
+                      )}
                     </Button>
                   </div>
-                </div>
 
-                <div className="flex min-h-0 flex-1 flex-col">
-                  <div className="border-b border-stone-200/80 px-5 py-4 sm:px-6">
-                    <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-                      {AGENT_ORDER.map((agentKey) => {
-                        const agent = getAgentMeta(agentKey)
-                        const active = activeAgent === agentKey
-                        const Icon = agent.icon
+                  {!sidebarCollapsed ? (
+                    <>
+                      <div className="px-4 pb-4 pt-4">
+                        <div className="flex items-center gap-3 rounded-[22px] border border-stone-200 bg-white px-4 py-3 shadow-sm">
+                          <Search className="h-4 w-4 text-stone-400" />
+                          <Input
+                            value={searchQuery}
+                            onChange={(event: ChangeEvent<HTMLInputElement>) =>
+                              setSearchQuery(event.target.value)
+                            }
+                            placeholder="Buscar conversaciones..."
+                            className="h-auto border-0 bg-transparent p-0 text-sm shadow-none placeholder:text-stone-400 focus-visible:ring-0"
+                          />
+                        </div>
 
-                        return (
-                          <button
-                            key={agentKey}
-                            type="button"
-                            onClick={() => void handlePickAgent(agentKey)}
-                            className={cn(
-                              'flex items-center gap-3 rounded-[24px] border px-4 py-3 text-left transition',
-                              active
-                                ? 'border-lime-300 bg-white shadow-sm ring-1 ring-lime-200'
-                                : 'border-stone-200 bg-white/80 hover:border-stone-300 hover:bg-white',
+                        <div className="mt-4 rounded-[24px] border border-white bg-white/60 p-3 shadow-sm">
+                          <div className="mb-2 flex items-center justify-between">
+                            <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-stone-400">
+                              Conversaciones guardadas
+                            </span>
+                            {loadingList && (
+                              <span className="text-[11px] text-stone-400">Cargando…</span>
                             )}
-                          >
-                            <div
+                          </div>
+
+                          <ScrollArea className="h-[calc(100vh-310px)] pr-2">
+                            {groupedConversations.length === 0 ? (
+                              <div className="rounded-[20px] border border-dashed border-stone-200 bg-stone-50 px-4 py-5 text-sm text-stone-500">
+                                {searchQuery.trim()
+                                  ? 'No encontré conversaciones con ese término.'
+                                  : 'Todavía no hay conversaciones para este agente.'}
+                              </div>
+                            ) : (
+                              <div className="space-y-5">
+                                {groupedConversations.map((group) => (
+                                  <div key={group.label} className="space-y-3">
+                                    <p className="px-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-stone-400">
+                                      {group.label}
+                                    </p>
+
+                                    <div className="space-y-2">
+                                      {group.items.map((item) => {
+                                        const active = item.thread_id === activeThreadId
+                                        return (
+                                          <button
+                                            key={item.thread_id}
+                                            type="button"
+                                            onClick={() => void handlePickConversation(item)}
+                                            className={cn(
+                                              'w-full rounded-[22px] border p-3 text-left transition',
+                                              active
+                                                ? 'border-lime-300 bg-lime-50/80 shadow-sm'
+                                                : 'border-stone-200 bg-white hover:border-lime-200 hover:bg-lime-50/40',
+                                            )}
+                                          >
+                                            <div className="flex items-start justify-between gap-3">
+                                              <div className="min-w-0">
+                                                <p className="truncate text-sm font-semibold text-stone-900">
+                                                  {item.title || 'Conversación'}
+                                                </p>
+                                                <p className="mt-1 line-clamp-2 text-sm leading-6 text-stone-500">
+                                                  {conversationPreview(item)}
+                                                </p>
+                                              </div>
+
+                                              <div className="flex shrink-0 flex-col items-end gap-2">
+                                                <span className="text-[11px] text-stone-400">
+                                                  {item.updated_at
+                                                    ? new Intl.DateTimeFormat('es-AR', {
+                                                        day: '2-digit',
+                                                        month: 'short',
+                                                      }).format(new Date(item.updated_at))
+                                                    : ''}
+                                                </span>
+                                                <span
+                                                  className={cn(
+                                                    'inline-flex items-center rounded-full px-2 py-1 text-[11px] font-medium',
+                                                    active
+                                                      ? 'bg-lime-100 text-lime-700'
+                                                      : 'bg-stone-100 text-stone-500',
+                                                  )}
+                                                >
+                                                  {active ? 'Activa' : `${item.turns} msgs`}
+                                                </span>
+                                              </div>
+                                            </div>
+                                          </button>
+                                        )
+                                      })}
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </ScrollArea>
+                        </div>
+                      </div>
+
+                      <div className="mt-auto px-4 pb-4">
+                        <Button
+                          type="button"
+                          onClick={handleNewConversation}
+                          className="h-14 w-full rounded-[22px] bg-lime-200 text-[15px] font-semibold text-lime-950 shadow-sm transition hover:bg-lime-300"
+                        >
+                          <Plus className="mr-2 h-4 w-4" />
+                          Nueva conversación
+                        </Button>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="flex flex-1 flex-col items-center gap-3 px-3 pb-4 pt-4">
+                      <div className="grid w-full grid-cols-1 gap-2">
+                        {AGENT_ORDER.map((agentKey) => {
+                          const agent = getAgentMeta(agentKey)
+                          const active = activeAgent === agentKey
+                          const Icon = agent.icon
+                          return (
+                            <button
+                              key={agentKey}
+                              type="button"
+                              onClick={() => void handlePickAgent(agentKey)}
                               className={cn(
-                                'flex h-12 w-12 shrink-0 items-center justify-center rounded-full border shadow-sm',
+                                'flex h-16 w-full items-center justify-center rounded-[18px] border transition',
                                 active
-                                  ? 'border-lime-200 bg-lime-50 text-lime-700'
-                                  : 'border-stone-200 bg-stone-50 text-stone-600',
+                                  ? 'border-lime-300 bg-white shadow-sm ring-1 ring-lime-200'
+                                  : 'border-stone-200 bg-white/80 hover:border-lime-200 hover:bg-lime-50/50',
                               )}
+                              aria-label={agent.label}
                             >
-                              <Icon className="h-5 w-5" />
-                            </div>
+                              <Icon className={cn('h-5 w-5', active ? 'text-lime-700' : 'text-stone-500')} />
+                            </button>
+                          )
+                        })}
+                      </div>
 
-                            <div className="min-w-0">
-                              <p className="truncate text-sm font-semibold text-stone-900">
-                                {agent.label}
-                              </p>
-                              <p className="truncate text-[12px] text-stone-500">{agent.subtitle}</p>
-                            </div>
-                          </button>
-                        )
-                      })}
+                      <Button
+                        type="button"
+                        onClick={handleNewConversation}
+                        className="mt-auto h-12 w-full rounded-[18px] bg-lime-200 text-sm font-semibold text-lime-950 hover:bg-lime-300"
+                      >
+                        <Plus className="mr-2 h-4 w-4" />
+                      </Button>
                     </div>
-                  </div>
+                  )}
+                </aside>
 
-                  <ScrollArea className="flex-1">
-                    <div className="mx-auto flex w-full max-w-5xl flex-col gap-4 px-4 py-5 sm:px-6 lg:px-8">
-                      {error && (
-                        <div className="rounded-[20px] border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
-                          {error}
-                        </div>
-                      )}
-
-                      {loadingThread && messages.length === 0 ? (
-                        <div className="flex items-center gap-3 rounded-[26px] border border-stone-200 bg-white px-5 py-4 shadow-sm">
-                          <div className="flex h-10 w-10 items-center justify-center rounded-full border border-lime-200 bg-lime-50 text-lime-700">
-                            <currentAgent.icon className="h-5 w-5" />
+                <section className="flex min-h-0 min-w-0 flex-col bg-gradient-to-b from-white via-white to-stone-50/70">
+                  <div className="grid min-h-0 flex-1 grid-rows-[1fr_auto]">
+                    <ScrollArea className="min-h-0">
+                      <div className="mx-auto flex w-full max-w-5xl flex-col gap-4 px-6 py-6">
+                        {error && (
+                          <div className="rounded-[20px] border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+                            {error}
                           </div>
-                          <div className="space-y-2">
-                            <div className="h-3 w-52 rounded-full bg-stone-100" />
-                            <div className="h-3 w-72 rounded-full bg-stone-100" />
-                          </div>
-                        </div>
-                      ) : messages.length === 0 ? (
-                        <EmptyConversationState
-                          agent={currentAgent}
-                          onPrompt={(value) => {
-                            setInput(value)
-                            setTimeout(() => inputRef.current?.focus(), 40)
-                          }}
-                        />
-                      ) : (
-                        <>
-                          {messages.map((bubble) => (
-                            <MessageBubble key={bubble.id} bubble={bubble} />
-                          ))}
+                        )}
 
-                          {sending && (
-                            <div className="flex w-full justify-start gap-3">
-                              <div className="mt-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-lime-200 bg-lime-50 text-lime-700 shadow-sm">
-                                <currentAgent.icon className="h-5 w-5" />
-                              </div>
-                              <div className="max-w-[78%] rounded-[28px] rounded-bl-md border border-stone-200 bg-white px-5 py-4 shadow-sm">
-                                <div className="flex items-center gap-1.5">
-                                  <span className="h-2 w-2 animate-pulse rounded-full bg-lime-500" />
-                                  <span className="h-2 w-2 animate-pulse rounded-full bg-lime-500 [animation-delay:120ms]" />
-                                  <span className="h-2 w-2 animate-pulse rounded-full bg-lime-500 [animation-delay:240ms]" />
-                                </div>
-                              </div>
+                        {loadingThread && messages.length === 0 ? (
+                          <div className="flex items-center gap-3 rounded-[26px] border border-stone-200 bg-white px-5 py-4 shadow-sm">
+                            <div className="flex h-10 w-10 items-center justify-center rounded-full border border-lime-200 bg-lime-50 text-lime-700">
+                              <currentAgent.icon className="h-5 w-5" />
                             </div>
-                          )}
-                        </>
-                      )}
-
-                      <div ref={messagesEndRef} />
-                    </div>
-                  </ScrollArea>
-
-                  <div className="border-t border-stone-200/80 bg-white/85 px-4 py-4 backdrop-blur-sm sm:px-6">
-                    <div className="mx-auto flex w-full max-w-5xl flex-col gap-3">
-                      <div className="flex flex-wrap gap-2">
-                        {currentAgent.promptPills.map((pill) => (
-                          <button
-                            key={pill}
-                            type="button"
-                            onClick={() => {
-                              setInput(pill)
+                            <div className="space-y-2">
+                              <div className="h-3 w-52 rounded-full bg-stone-100" />
+                              <div className="h-3 w-72 rounded-full bg-stone-100" />
+                            </div>
+                          </div>
+                        ) : messages.length === 0 ? (
+                          <EmptyConversationState
+                            agent={currentAgent}
+                            onPrompt={(value) => {
+                              setInput(value)
                               setTimeout(() => inputRef.current?.focus(), 40)
                             }}
-                            className="inline-flex items-center gap-2 rounded-full border border-stone-200 bg-white px-3.5 py-2 text-sm text-stone-700 transition hover:border-lime-300 hover:bg-lime-50 hover:text-lime-800"
-                          >
-                            <Sparkles className="h-4 w-4 text-lime-600" />
-                            {pill}
-                          </button>
-                        ))}
+                          />
+                        ) : (
+                          <>
+                            {messages.map((bubble) => (
+                              <MessageBubble key={bubble.id} bubble={bubble} />
+                            ))}
+
+                            {sending && (
+                              <div className="flex w-full justify-start gap-3">
+                                <div className="mt-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-lime-200 bg-lime-50 text-lime-700 shadow-sm">
+                                  <currentAgent.icon className="h-5 w-5" />
+                                </div>
+                                <div className="max-w-[78%] rounded-[28px] rounded-bl-md border border-stone-200 bg-white px-5 py-4 shadow-sm">
+                                  <div className="flex items-center gap-1.5">
+                                    <span className="h-2 w-2 animate-pulse rounded-full bg-lime-500" />
+                                    <span className="h-2 w-2 animate-pulse rounded-full bg-lime-500 [animation-delay:120ms]" />
+                                    <span className="h-2 w-2 animate-pulse rounded-full bg-lime-500 [animation-delay:240ms]" />
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+                          </>
+                        )}
+
+                        <div ref={messagesEndRef} />
                       </div>
+                    </ScrollArea>
 
-                      <Separator className="bg-stone-200" />
+                    <div className="border-t border-stone-200/80 bg-white/85 px-6 py-4 backdrop-blur-sm">
+                      <div className="mx-auto flex w-full max-w-5xl flex-col gap-3">
+                        <div className="flex flex-wrap gap-2">
+                          {currentAgent.promptPills.map((pill) => (
+                            <button
+                              key={pill}
+                              type="button"
+                              onClick={() => {
+                                setInput(pill)
+                                setTimeout(() => inputRef.current?.focus(), 40)
+                              }}
+                              className="inline-flex items-center gap-2 rounded-full border border-stone-200 bg-white px-3.5 py-2 text-sm text-stone-700 transition hover:border-lime-300 hover:bg-lime-50 hover:text-lime-800"
+                            >
+                              <Sparkles className="h-4 w-4 text-lime-600" />
+                              {pill}
+                            </button>
+                          ))}
+                        </div>
 
-                      <div className="flex items-end gap-3 rounded-[28px] border border-stone-200 bg-white px-3 py-3 shadow-sm">
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          className="h-10 w-10 shrink-0 rounded-full border border-stone-200 bg-stone-50 text-stone-500 hover:bg-stone-100"
-                          aria-label="Adjuntar"
-                        >
-                          <Paperclip className="h-4 w-4" />
-                        </Button>
+                        <Separator className="bg-stone-200" />
 
-                        <Input
-                          ref={inputRef}
-                          value={input}
-                          onChange={(event: ChangeEvent<HTMLInputElement>) =>
-                            setInput(event.target.value)
-                          }
-                          onKeyDown={handleKeyDown}
-                          placeholder="Escribí tu mensaje..."
-                          className="h-12 flex-1 border-0 bg-transparent px-2 text-[15px] shadow-none placeholder:text-stone-400 focus-visible:ring-0"
-                          autoComplete="off"
-                        />
+                        <div className="flex items-end gap-3 rounded-[28px] border border-stone-200 bg-white px-3 py-3 shadow-sm">
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="h-10 w-10 shrink-0 rounded-full border border-stone-200 bg-stone-50 text-stone-500 hover:bg-stone-100"
+                            aria-label="Adjuntar"
+                          >
+                            <Paperclip className="h-4 w-4" />
+                          </Button>
 
-                        <Button
-                          type="button"
-                          onClick={() => void handleSend()}
-                          disabled={!input.trim() || sending}
-                          className="h-12 w-12 shrink-0 rounded-full bg-lime-600 text-white shadow-md transition hover:bg-lime-700 disabled:opacity-50"
-                          aria-label="Enviar mensaje"
-                        >
-                          <Send className="h-4 w-4" />
-                        </Button>
+                          <Input
+                            ref={inputRef}
+                            value={input}
+                            onChange={(event: ChangeEvent<HTMLInputElement>) =>
+                              setInput(event.target.value)
+                            }
+                            onKeyDown={handleKeyDown}
+                            placeholder="Escribí tu mensaje..."
+                            className="h-12 flex-1 border-0 bg-transparent px-2 text-[15px] shadow-none placeholder:text-stone-400 focus-visible:ring-0"
+                            autoComplete="off"
+                          />
+
+                          <Button
+                            type="button"
+                            onClick={() => void handleSend()}
+                            disabled={!input.trim() || sending}
+                            className="h-12 w-12 shrink-0 rounded-full bg-lime-600 text-white shadow-md transition hover:bg-lime-700 disabled:opacity-50"
+                            aria-label="Enviar mensaje"
+                          >
+                            <Send className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              </section>
+                </section>
+              </div>
             </div>
           </motion.div>
         )}
