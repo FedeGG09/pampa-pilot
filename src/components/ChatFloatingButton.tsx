@@ -77,12 +77,7 @@ const AGENT_META: Record<AgentKey, AgentMeta> = {
     icon: Leaf,
     greeting:
       '¡Hola! Soy tu asistente Agrónomo 🌱\n¿En qué puedo ayudarte hoy con tus cultivos o suelos?',
-    promptPills: [
-      'Plan específico',
-      'Suelos arenosos',
-      'Cobertura ideal',
-      'Más recomendaciones',
-    ],
+    promptPills: ['Plan específico', 'Suelos arenosos', 'Cobertura ideal', 'Más recomendaciones'],
     accent: 'from-lime-100 to-emerald-100',
     ring: 'ring-lime-300/50',
     badge: 'bg-lime-50 text-lime-700 border-lime-200',
@@ -505,15 +500,7 @@ export default function ChatFloatingButton() {
       setSending(false)
       setTimeout(() => inputRef.current?.focus(), 50)
     }
-  }, [
-    activeAgent,
-    activeThreadId,
-    input,
-    messages,
-    refreshList,
-    sending,
-    userId,
-  ])
+  }, [activeAgent, activeThreadId, input, messages, refreshList, sending, userId])
 
   const handleKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
     if (event.key === 'Enter') {
@@ -524,21 +511,17 @@ export default function ChatFloatingButton() {
 
   useEffect(() => {
     if (!open) return
-
     const timer = window.setTimeout(() => {
       void refreshList()
     }, 200)
-
     return () => window.clearTimeout(timer)
   }, [open, refreshList])
 
   useEffect(() => {
     if (!open) return
-
     const timer = window.setTimeout(() => {
       void refreshList(searchQuery)
     }, 280)
-
     return () => window.clearTimeout(timer)
   }, [searchQuery, open, refreshList])
 
@@ -549,13 +532,11 @@ export default function ChatFloatingButton() {
 
   useEffect(() => {
     if (!open) return
-
     const onKeyDown = (event: globalThis.KeyboardEvent) => {
       if (event.key === 'Escape') {
         setOpen(false)
       }
     }
-
     document.addEventListener('keydown', onKeyDown)
     return () => document.removeEventListener('keydown', onKeyDown)
   }, [open])
@@ -606,20 +587,14 @@ export default function ChatFloatingButton() {
                 </div>
               </header>
 
-              <div className="grid min-h-0 flex-1 grid-cols-[320px_1fr]">
-                <aside className={cn('flex min-h-0 flex-col border-r border-stone-200 bg-stone-50', sidebarCollapsed && 'w-[88px]')}>
+              <div className="grid min-h-0 flex-1 grid-cols-[340px_1fr]">
+                <aside className="flex min-h-0 flex-col border-r border-stone-200 bg-stone-50">
                   <div className="flex items-center justify-between gap-3 border-b border-stone-200 px-4 py-4">
-                    {!sidebarCollapsed ? (
-                      <div>
-                        <h2 className="text-[22px] font-semibold tracking-tight text-stone-900">
-                          Conversaciones
-                        </h2>
-                      </div>
-                    ) : (
-                      <div className="flex h-10 w-10 items-center justify-center rounded-2xl border border-stone-200 bg-white text-stone-600 shadow-sm">
-                        <MessageCircle className="h-5 w-5" />
-                      </div>
-                    )}
+                    <div>
+                      <h2 className="text-[22px] font-semibold tracking-tight text-stone-900">
+                        Conversaciones
+                      </h2>
+                    </div>
 
                     <Button
                       type="button"
@@ -637,150 +612,110 @@ export default function ChatFloatingButton() {
                     </Button>
                   </div>
 
-                  {!sidebarCollapsed ? (
-                    <>
-                      <div className="px-4 pb-4 pt-4">
-                        <div className="flex items-center gap-3 rounded-[22px] border border-stone-200 bg-white px-4 py-3 shadow-sm">
-                          <Search className="h-4 w-4 text-stone-400" />
-                          <Input
-                            value={searchQuery}
-                            onChange={(event: ChangeEvent<HTMLInputElement>) =>
-                              setSearchQuery(event.target.value)
-                            }
-                            placeholder="Buscar conversaciones..."
-                            className="h-auto border-0 bg-transparent p-0 text-sm shadow-none placeholder:text-stone-400 focus-visible:ring-0"
-                          />
-                        </div>
-
-                        <div className="mt-4 rounded-[24px] border border-white bg-white/60 p-3 shadow-sm">
-                          <div className="mb-2 flex items-center justify-between">
-                            <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-stone-400">
-                              Conversaciones guardadas
-                            </span>
-                            {loadingList && (
-                              <span className="text-[11px] text-stone-400">Cargando…</span>
-                            )}
-                          </div>
-
-                          <ScrollArea className="h-[calc(100vh-310px)] pr-2">
-                            {groupedConversations.length === 0 ? (
-                              <div className="rounded-[20px] border border-dashed border-stone-200 bg-stone-50 px-4 py-5 text-sm text-stone-500">
-                                {searchQuery.trim()
-                                  ? 'No encontré conversaciones con ese término.'
-                                  : 'Todavía no hay conversaciones para este agente.'}
-                              </div>
-                            ) : (
-                              <div className="space-y-5">
-                                {groupedConversations.map((group) => (
-                                  <div key={group.label} className="space-y-3">
-                                    <p className="px-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-stone-400">
-                                      {group.label}
-                                    </p>
-
-                                    <div className="space-y-2">
-                                      {group.items.map((item) => {
-                                        const active = item.thread_id === activeThreadId
-                                        return (
-                                          <button
-                                            key={item.thread_id}
-                                            type="button"
-                                            onClick={() => void handlePickConversation(item)}
-                                            className={cn(
-                                              'w-full rounded-[22px] border p-3 text-left transition',
-                                              active
-                                                ? 'border-lime-300 bg-lime-50/80 shadow-sm'
-                                                : 'border-stone-200 bg-white hover:border-lime-200 hover:bg-lime-50/40',
-                                            )}
-                                          >
-                                            <div className="flex items-start justify-between gap-3">
-                                              <div className="min-w-0">
-                                                <p className="truncate text-sm font-semibold text-stone-900">
-                                                  {item.title || 'Conversación'}
-                                                </p>
-                                                <p className="mt-1 line-clamp-2 text-sm leading-6 text-stone-500">
-                                                  {conversationPreview(item)}
-                                                </p>
-                                              </div>
-
-                                              <div className="flex shrink-0 flex-col items-end gap-2">
-                                                <span className="text-[11px] text-stone-400">
-                                                  {item.updated_at
-                                                    ? new Intl.DateTimeFormat('es-AR', {
-                                                        day: '2-digit',
-                                                        month: 'short',
-                                                      }).format(new Date(item.updated_at))
-                                                    : ''}
-                                                </span>
-                                                <span
-                                                  className={cn(
-                                                    'inline-flex items-center rounded-full px-2 py-1 text-[11px] font-medium',
-                                                    active
-                                                      ? 'bg-lime-100 text-lime-700'
-                                                      : 'bg-stone-100 text-stone-500',
-                                                  )}
-                                                >
-                                                  {active ? 'Activa' : `${item.turns} msgs`}
-                                                </span>
-                                              </div>
-                                            </div>
-                                          </button>
-                                        )
-                                      })}
-                                    </div>
-                                  </div>
-                                ))}
-                              </div>
-                            )}
-                          </ScrollArea>
-                        </div>
-                      </div>
-
-                      <div className="mt-auto px-4 pb-4">
-                        <Button
-                          type="button"
-                          onClick={handleNewConversation}
-                          className="h-14 w-full rounded-[22px] bg-lime-200 text-[15px] font-semibold text-lime-950 shadow-sm transition hover:bg-lime-300"
-                        >
-                          <Plus className="mr-2 h-4 w-4" />
-                          Nueva conversación
-                        </Button>
-                      </div>
-                    </>
-                  ) : (
-                    <div className="flex flex-1 flex-col items-center gap-3 px-3 pb-4 pt-4">
-                      <div className="grid w-full grid-cols-1 gap-2">
-                        {AGENT_ORDER.map((agentKey) => {
-                          const agent = getAgentMeta(agentKey)
-                          const active = activeAgent === agentKey
-                          const Icon = agent.icon
-                          return (
-                            <button
-                              key={agentKey}
-                              type="button"
-                              onClick={() => void handlePickAgent(agentKey)}
-                              className={cn(
-                                'flex h-16 w-full items-center justify-center rounded-[18px] border transition',
-                                active
-                                  ? 'border-lime-300 bg-white shadow-sm ring-1 ring-lime-200'
-                                  : 'border-stone-200 bg-white/80 hover:border-lime-200 hover:bg-lime-50/50',
-                              )}
-                              aria-label={agent.label}
-                            >
-                              <Icon className={cn('h-5 w-5', active ? 'text-lime-700' : 'text-stone-500')} />
-                            </button>
-                          )
-                        })}
-                      </div>
-
-                      <Button
-                        type="button"
-                        onClick={handleNewConversation}
-                        className="mt-auto h-12 w-full rounded-[18px] bg-lime-200 text-sm font-semibold text-lime-950 hover:bg-lime-300"
-                      >
-                        <Plus className="mr-2 h-4 w-4" />
-                      </Button>
+                  <div className="px-4 pb-4 pt-4">
+                    <div className="flex items-center gap-3 rounded-[22px] border border-stone-200 bg-white px-4 py-3 shadow-sm">
+                      <Search className="h-4 w-4 text-stone-400" />
+                      <Input
+                        value={searchQuery}
+                        onChange={(event: ChangeEvent<HTMLInputElement>) =>
+                          setSearchQuery(event.target.value)
+                        }
+                        placeholder="Buscar conversaciones..."
+                        className="h-auto border-0 bg-transparent p-0 text-sm shadow-none placeholder:text-stone-400 focus-visible:ring-0"
+                      />
                     </div>
-                  )}
+
+                    <div className="mt-4 rounded-[24px] border border-white bg-white/60 p-3 shadow-sm">
+                      <div className="mb-2 flex items-center justify-between">
+                        <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-stone-400">
+                          Conversaciones guardadas
+                        </span>
+                        {loadingList && <span className="text-[11px] text-stone-400">Cargando…</span>}
+                      </div>
+
+                      <ScrollArea className="h-[calc(100vh-310px)] pr-2">
+                        {groupedConversations.length === 0 ? (
+                          <div className="rounded-[20px] border border-dashed border-stone-200 bg-stone-50 px-4 py-5 text-sm text-stone-500">
+                            {searchQuery.trim()
+                              ? 'No encontré conversaciones con ese término.'
+                              : 'Todavía no hay conversaciones para este agente.'}
+                          </div>
+                        ) : (
+                          <div className="space-y-5">
+                            {groupedConversations.map((group) => (
+                              <div key={group.label} className="space-y-3">
+                                <p className="px-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-stone-400">
+                                  {group.label}
+                                </p>
+
+                                <div className="space-y-2">
+                                  {group.items.map((item) => {
+                                    const active = item.thread_id === activeThreadId
+                                    return (
+                                      <button
+                                        key={item.thread_id}
+                                        type="button"
+                                        onClick={() => void handlePickConversation(item)}
+                                        className={cn(
+                                          'w-full rounded-[22px] border p-3 text-left transition',
+                                          active
+                                            ? 'border-lime-300 bg-lime-50/80 shadow-sm'
+                                            : 'border-stone-200 bg-white hover:border-lime-200 hover:bg-lime-50/40',
+                                        )}
+                                      >
+                                        <div className="flex items-start justify-between gap-3">
+                                          <div className="min-w-0">
+                                            <p className="truncate text-sm font-semibold text-stone-900">
+                                              {item.title || 'Conversación'}
+                                            </p>
+                                            <p className="mt-1 line-clamp-2 text-sm leading-6 text-stone-500">
+                                              {conversationPreview(item)}
+                                            </p>
+                                          </div>
+
+                                          <div className="flex shrink-0 flex-col items-end gap-2">
+                                            <span className="text-[11px] text-stone-400">
+                                              {item.updated_at
+                                                ? new Intl.DateTimeFormat('es-AR', {
+                                                    day: '2-digit',
+                                                    month: 'short',
+                                                  }).format(new Date(item.updated_at))
+                                                : ''}
+                                            </span>
+                                            <span
+                                              className={cn(
+                                                'inline-flex items-center rounded-full px-2 py-1 text-[11px] font-medium',
+                                                active
+                                                  ? 'bg-lime-100 text-lime-700'
+                                                  : 'bg-stone-100 text-stone-500',
+                                              )}
+                                            >
+                                              {active ? 'Activa' : `${item.turns} msgs`}
+                                            </span>
+                                          </div>
+                                        </div>
+                                      </button>
+                                    )
+                                  })}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </ScrollArea>
+                    </div>
+                  </div>
+
+                  <div className="mt-auto px-4 pb-4">
+                    <Button
+                      type="button"
+                      onClick={handleNewConversation}
+                      className="h-14 w-full rounded-[22px] bg-lime-200 text-[15px] font-semibold text-lime-950 shadow-sm transition hover:bg-lime-300"
+                    >
+                      <Plus className="mr-2 h-4 w-4" />
+                      Nueva conversación
+                    </Button>
+                  </div>
                 </aside>
 
                 <section className="flex min-h-0 min-w-0 flex-col bg-gradient-to-b from-white via-white to-stone-50/70">
