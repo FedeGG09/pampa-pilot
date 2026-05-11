@@ -186,6 +186,10 @@ function conversationPreview(item: ConversationItem): string {
   return text.length > 92 ? `${text.slice(0, 92).trim()}…` : text
 }
 
+function getAgentMeta(agent: AgentKey): AgentMeta {
+  return AGENT_META[agent] ?? AGENT_META.agronomist
+}
+
 function messageToBubble(message: ChatMessage, agent: AgentKey): UiBubble {
   return {
     id: createId(),
@@ -194,10 +198,6 @@ function messageToBubble(message: ChatMessage, agent: AgentKey): UiBubble {
     agent,
     timeLabel: formatTimeLabel(),
   }
-}
-
-function getAgentMeta(agent: AgentKey): AgentMeta {
-  return AGENT_META[agent] ?? AGENT_META.agronomist
 }
 
 function assistantBubbleFromResponse(response: SupervisorChatResponse): UiBubble {
